@@ -1,0 +1,97 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Profil de {{ employee.prenom }} {{ employee.nom }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 20px;">
+    <div style="flex: 1;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Profil : {{ employee.prenom }} {{ employee.nom }}</h2>
+                <div>
+                    <a href="{% url 'employees:employee_update' employee.pk %}" class="btn">Modifier</a>
+                    <a href="{% url 'employees:employee_delete' employee.pk %}" class="btn" style="background: #e74c3c;">Supprimer</a>
+                </div>
+            </div>
+            <p><strong>Matricule :</strong> {{ employee.matricule }}</p>
+            <p><strong>Poste :</strong> {{ employee.poste.titre }} ({{ employee.poste.departement.nom }})</p>
+            <p><strong>Date d'embauche :</strong> {{ employee.date_embauche }}</p>
+            <p><strong>Salaire :</strong> {{ employee.salaire }} €</p>
+            <p><strong>Email :</strong> {{ employee.email }}</p>
+            <p><strong>Téléphone :</strong> {{ employee.telephone }}</p>
+            <p><strong>Date de naissance :</strong> {{ employee.date_naissance|default:"Non renseignée" }}</p>
+            <p><strong>Adresse :</strong><br>{{ employee.adresse|linebreaks }}</p>
+        </div>
+
+        <div class="card">
+            <h2>Contrats</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contrat in contrats %}
+                    <tr>
+                        <td>{{ contrat.type_contrat }}</td>
+                        <td>{{ contrat.date_debut }}</td>
+                        <td>{{ contrat.date_fin|default:"Permanent" }}</td>
+                        <td>{% if contrat.actif %}Actif{% else %}Expiré{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Aucun contrat enregistré.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="flex: 1;">
+        <div class="card">
+            <h2>Documents RH</h2>
+            <ul>
+                {% for doc in documents %}
+                <li>
+                    <a href="{{ doc.fichier.url }}" target="_blank">{{ doc.titre }}</a> 
+                    ({{ doc.get_type_doc_display }})
+                </li>
+                {% empty %}
+                <li>Aucun document.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Évaluations de performance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Évaluateur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eval in evaluations %}
+                    <tr>
+                        <td>{{ eval.date }}</td>
+                        <td>{{ eval.score }}/100</td>
+                        <td>{{ eval.evaluateur }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">Aucune évaluation.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

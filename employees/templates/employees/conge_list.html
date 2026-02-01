@@ -1,0 +1,51 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Gestion des congés{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Congés et Absences</h2>
+        <a href="{% url 'employees:conge_request' %}" class="btn">Demander un congé</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Type</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conge in conges %}
+            <tr>
+                <td>{{ conge.employe }}</td>
+                <td>{{ conge.get_type_conge_display }}</td>
+                <td>{{ conge.date_debut }}</td>
+                <td>{{ conge.date_fin }}</td>
+                <td>
+                    <span style="padding: 5px 10px; border-radius: 15px; background: {% if conge.statut == 'APPROUVE' %}#2ecc71{% elif conge.statut == 'REJETE' %}#e74c3c{% else %}#f1c40f{% endif %}; color: white; font-size: 0.8rem;">
+                        {{ conge.get_statut_display }}
+                    </span>
+                </td>
+                <td>
+                    {% if conge.statut == 'EN_ATTENTE' %}
+                    <a href="{% url 'employees:conge_approve' conge.pk %}" class="btn" style="background: #2ecc71; padding: 5px 10px; font-size: 0.8rem;"><i class="fas fa-check"></i></a>
+                    <a href="{% url 'employees:conge_reject' conge.pk %}" class="btn" style="background: #e74c3c; padding: 5px 10px; font-size: 0.8rem;"><i class="fas fa-times"></i></a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Aucun congé trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

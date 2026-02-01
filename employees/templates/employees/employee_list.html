@@ -1,0 +1,50 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Liste des employés{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Employés</h2>
+        <a href="{% url 'employees:employee_create' %}" class="btn">Ajouter un employé</a>
+    </div>
+
+    <form method="get" style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <input type="text" name="q" placeholder="Rechercher par nom, matricule, poste..." value="{{ request.GET.q }}" style="padding: 10px; flex-grow: 1; border-radius: 5px; border: 1px solid #ddd;">
+        <button type="submit" class="btn">Rechercher</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Matricule</th>
+                <th>Nom Complet</th>
+                <th>Poste</th>
+                <th>Département</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee.matricule }}</td>
+                <td>{{ employee.prenom }} {{ employee.nom }}</td>
+                <td>{{ employee.poste.titre }}</td>
+                <td>{{ employee.poste.departement.nom }}</td>
+                <td>{{ employee.email }}</td>
+                <td>
+                    <a href="{% url 'employees:employee_detail' employee.pk %}">Détails</a> |
+                    <a href="{% url 'employees:employee_update' employee.pk %}">Modifier</a> |
+                    <a href="{% url 'employees:employee_delete' employee.pk %}" style="color: #e74c3c;">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Aucun employé trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

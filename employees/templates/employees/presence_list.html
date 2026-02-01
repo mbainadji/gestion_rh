@@ -1,0 +1,38 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Gestion des présences{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Pointages et Présences</h2>
+        <a href="{% url 'employees:presence_create' %}" class="btn">Enregistrer des présences</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Date</th>
+                <th>Arrivée</th>
+                <th>Départ</th>
+                <th>Heures Sup.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in presences %}
+            <tr>
+                <td>{{ p.employe }}</td>
+                <td>{{ p.date }}</td>
+                <td>{{ p.heure_arrivee }}</td>
+                <td>{{ p.heure_depart|default:"--" }}</td>
+                <td>{{ p.heures_sup }} h</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Aucun enregistrement de présence.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

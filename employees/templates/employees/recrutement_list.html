@@ -1,0 +1,38 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Gestion des recrutements{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Offres d'Emploi et Candidatures</h2>
+        <a href="{% url 'employees:recrutement_create' %}" class="btn">Publier une offre</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Titre de l'offre</th>
+                <th>Département</th>
+                <th>Publication</th>
+                <th>Candidatures</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for offre in offres %}
+            <tr>
+                <td>{{ offre.titre }}</td>
+                <td>{{ offre.departement.nom }}</td>
+                <td>{{ offre.date_publication }}</td>
+                <td>{{ offre.num_candidatures }}</td>
+                <td>{% if offre.cloturee %}Clôturée{% else %}Ouverte{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Aucune offre d'emploi en cours.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

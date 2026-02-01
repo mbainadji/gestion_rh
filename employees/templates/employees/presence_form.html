@@ -1,0 +1,80 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Ajouter des présences{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Enregistrer des présences</h2>
+    
+    <form method="get" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+        <div>
+            <label>Filtrer par Département :</label><br>
+            <select name="departement" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                <option value="">Sélectionner...</option>
+                {% for dept in departements %}
+                <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn">Filtrer</button>
+    </form>
+
+    {% if selected_dept %}
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Date :</label><br>
+                <input type="date" name="date" required value="{% now 'Y-m-d' %}" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+            </div>
+            <div>
+                <label>Heure d'arrivée :</label><br>
+                <input type="time" name="heure_arrivee" value="08:00" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+            </div>
+            <div>
+                <label>Heure de départ :</label><br>
+                <input type="time" name="heure_depart" value="17:00" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+            </div>
+        </div>
+
+        <h3>Sélectionner les employés présents :</h3>
+        <table style="margin-bottom: 20px;">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="toggleAll(this)"></th>
+                    <th>Matricule</th>
+                    <th>Nom Complet</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td><input type="checkbox" name="employees" value="{{ emp.id }}" class="emp-checkbox"></td>
+                    <td>{{ emp.matricule }}</td>
+                    <td>{{ emp.prenom }} {{ emp.nom }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">Aucun employé dans ce département.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn">Enregistrer les présences</button>
+        <a href="{% url 'employees:presence_list' %}" class="btn" style="background: #95a5a6;">Annuler</a>
+    </form>
+    {% else %}
+    <p>Veuillez sélectionner un département pour afficher les employés.</p>
+    {% endif %}
+</div>
+
+<script>
+function toggleAll(source) {
+    checkboxes = document.getElementsByClassName('emp-checkbox');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+</script>
+{% endblock %}

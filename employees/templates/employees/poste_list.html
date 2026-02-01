@@ -1,0 +1,34 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Liste des postes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Postes et Fonctions</h2>
+        <a href="{% url 'employees:poste_create' %}" class="btn">Ajouter un poste</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Département</th>
+                <th>Nombre d'employés</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for poste in postes %}
+            <tr>
+                <td>{{ poste.titre }}</td>
+                <td>{{ poste.departement.nom }}</td>
+                <td>{{ poste.num_employees }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">Aucun poste trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Confirmer la suppression</h2>
+    <p>Êtes-vous sûr de vouloir supprimer "<strong>{{ object }}</strong>" ?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: #e74c3c;">Supprimer</button>
+        <a href="javascript:history.back()" class="btn" style="background: #95a5a6;">Annuler</a>
+    </form>
+</div>
+{% endblock %}

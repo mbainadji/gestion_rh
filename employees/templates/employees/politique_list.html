@@ -1,0 +1,25 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Politiques RH{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Politiques et Règles RH</h2>
+        <a href="{% url 'employees:politique_create' %}" class="btn">Ajouter un type de contrat</a>
+    </div>
+    <h3>Types de Contrats</h3>
+    <ul>
+        {% for tc in types_contrat %}
+        <li><strong>{{ tc.nom }}</strong> : {{ tc.description|default:"Pas de description" }}</li>
+        {% empty %}
+        <li>Aucun type de contrat défini.</li>
+        {% endfor %}
+    </ul>
+    
+    <div style="margin-top: 30px;">
+        <h3>Règles Internes</h3>
+        <p>Gérez les règles de congés, primes et heures supplémentaires via l'administration.</p>
+    </div>
+</div>
+{% endblock %}

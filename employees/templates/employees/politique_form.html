@@ -1,0 +1,24 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom: 15px;">
+            <label>Nom du Type de Contrat :</label><br>
+            <input type="text" name="nom" required style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Description :</label><br>
+            <textarea name="description" rows="5" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;"></textarea>
+        </div>
+        <div style="margin-top: 20px;">
+            <button type="submit" class="btn">Enregistrer</button>
+            <a href="{% url 'employees:politique_list' %}" class="btn" style="background: #95a5a6;">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

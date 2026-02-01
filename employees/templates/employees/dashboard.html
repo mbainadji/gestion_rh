@@ -1,0 +1,120 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Tableau de bord RH{% endblock %}
+{% block page_title %}Tableau de Bord Analytique{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <h3>Total Employés</h3>
+            <p>{{ total_employees }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-building"></i></div>
+        <div class="stat-info">
+            <h3>Départements</h3>
+            <p>{{ departements.count }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #e67e22; background: rgba(230, 126, 34, 0.1);"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <h3>Congés en attente</h3>
+            <p>{{ recent_conges.count }}</p>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-top: 30px;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.1rem;"><i class="fas fa-chart-pie"></i> Répartition par Département</h2>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Département</th>
+                        <th>Effectif</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dep in departements %}
+                    <tr>
+                        <td><strong>{{ dep.nom }}</strong></td>
+                        <td>{{ dep.num_employees }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.1rem;"><i class="fas fa-clock"></i> Alertes Congés Récents</h2>
+            <a href="{% url 'employees:conge_list' %}" class="btn" style="padding: 5px 12px; font-size: 0.8rem;">Voir tout</a>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Dates</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conge in recent_conges %}
+                    <tr>
+                        <td>{{ conge.employe.prenom }} {{ conge.employe.nom }}</td>
+                        <td><small>{{ conge.date_debut }} au {{ conge.date_fin }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: #999;">Aucune demande en attente.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 25px;">
+    <h2 style="font-size: 1.1rem;"><i class="fas fa-chart-line"></i> Distribution des Effectifs par Département</h2>
+    <div style="height: 300px;">
+        <canvas id="deptChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('deptChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [{% for dep in departements %}'{{ dep.nom }}',{% endfor %}],
+            datasets: [{
+                label: 'Nombre d\'employés',
+                data: [{% for dep in departements %}{{ dep.num_employees }},{% endfor %}],
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                borderColor: '#3498db',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %}

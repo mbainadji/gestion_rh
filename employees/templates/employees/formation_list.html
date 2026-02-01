@@ -1,0 +1,36 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Gestion des formations{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Formations et Compétences</h2>
+        <a href="{% url 'employees:formation_create' %}" class="btn">Créer une formation</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Budget</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in formations %}
+            <tr>
+                <td>{{ f.titre }}</td>
+                <td>{{ f.date_debut }}</td>
+                <td>{{ f.date_fin }}</td>
+                <td>{{ f.budget }} €</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Aucune formation planifiée.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
