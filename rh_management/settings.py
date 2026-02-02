@@ -76,9 +76,9 @@ WSGI_APPLICATION = "rh_management.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gestion_rh',
-        'USER': 'rh_user',
-        'PASSWORD': 'motdepasse',
+        'NAME': 'rh',
+        'USER': 'hakimi',
+        'PASSWORD': '12345678',
         'HOST': 'localhost',
         'PORT': '5432',
     }
