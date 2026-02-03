@@ -1,19 +1,73 @@
 {% extends 'employees/base.html' %}
 
 {% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>{{ title }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        <table>
-            {{ form.as_table }}
-        </table>
-        <div style="margin-top: 20px;">
-            <button type="submit" class="btn">Enregistrer</button>
-            <a href="javascript:history.back()" class="btn" style="background: #95a5a6;">Annuler</a>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-50 bg-slate-50/50">
+            <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-edit text-primary-500"></i>
+                Informations de l'employé
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Veuillez renseigner tous les champs obligatoires.</p>
         </div>
-    </form>
+        
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 gap-6">
+                {% for field in form %}
+                <div class="space-y-1.5">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-slate-700">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    
+                    <div class="relative">
+                        {% if field.errors %}
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-red-500">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                        {% endif %}
+                        
+                        {# Rendering the field with Tailwind classes #}
+                        {# Note: In a real Django app, we might use django-widget-tweaks or custom widgets #}
+                        {# Since I cannot change the widgets in models/forms easily, I will rely on basic rendering or suggest the user uses tweaks #}
+                        {# For this task, I will wrap them in a styled div or apply classes if possible via JS if needed, but let's try direct rendering first #}
+                        <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-50 [&>input]:border [&>input]:border-slate-200 [&>input]:rounded-xl [&>input]:transition-all [&>input]:focus:ring-2 [&>input]:focus:ring-primary-500 [&>input]:focus:bg-white [&>input]:focus:border-transparent [&>select]:w-full [&>select]:px-4 [&>select]:py-2.5 [&>select]:bg-slate-50 [&>select]:border [&>select]:border-slate-200 [&>select]:rounded-xl [&>textarea]:w-full [&>textarea]:px-4 [&>textarea]:py-2.5 [&>textarea]:bg-slate-50 [&>textarea]:border [&>textarea]:border-slate-200 [&>textarea]:rounded-xl">
+                            {{ field }}
+                        </div>
+                    </div>
+                    
+                    {% if field.help_text %}
+                        <p class="text-xs text-slate-400">{{ field.help_text }}</p>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <p class="text-xs text-red-600 font-medium">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="pt-6 border-t border-slate-50 flex items-center gap-3">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all duration-200 shadow-lg shadow-primary-900/10 gap-2">
+                    <i class="fas fa-check"></i>
+                    Enregistrer les modifications
+                </button>
+                <a href="javascript:history.back()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
