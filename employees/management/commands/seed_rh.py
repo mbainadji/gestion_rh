@@ -121,6 +121,7 @@ class Command(BaseCommand):
             # Conge
             Conge.objects.create(
                 employe=emp,
+                validateur=random.choice([e for e in employes if e != emp]),
                 type_conge=random.choice(['ANNUEL', 'MALADIE', 'AUTRE']),
                 date_debut=date(2024, 1, 1) + timedelta(days=random.randint(0, 30)),
                 date_fin=date(2024, 1, 1) + timedelta(days=random.randint(31, 40)),
@@ -147,18 +148,45 @@ class Command(BaseCommand):
                 )
 
         self.stdout.write('Creating Payroll data...')
-        for emp in employes[:5]:
-            salaire_base = emp.salaire
-            primes = Decimal(random.randint(100, 500))
-            deductions = Decimal(random.randint(50, 200))
-            FichePaie.objects.create(
+        for emp in employes:
+            for mois in range(1, 4):  # Janvier à Mars 2024
+                salaire_base = emp.salaire
+                primes_val = Decimal(random.randint(100, 500))
+                deductions = Decimal(random.randint(50, 200))
+                FichePaie.objects.create(
+                    employe=emp,
+                    mois=mois,
+                    annee=2024,
+                    salaire_base=salaire_base,
+                    primes=primes_val,
+                    deductions=deductions,
+                    net_a_payer=salaire_base + primes_val - deductions
+                )
+            # Also add some individual primes
+            if random.random() > 0.7:
+                Prime.objects.create(
+                    employe=emp,
+                    montant=Decimal(random.randint(200, 1000)),
+                    motif="Prime exceptionnelle Performance",
+                    date=date(2024, 1, 15)
+                )
+
+        self.stdout.write('Creating Evaluations and Objectives...')
+        for emp in employes:
+            if random.random() > 0.5:
+                Evaluation.objects.create(
+                    employe=emp,
+                    evaluateur=random.choice([e for e in employes if e != emp]),
+                    date=date(2023, 12, random.randint(1, 28)),
+                    score=random.randint(70, 95),
+                    commentaires="Très bon travail sur les derniers projets."
+                )
+            
+            Objectif.objects.create(
                 employe=emp,
-                mois=1,
-                annee=2024,
-                salaire_base=salaire_base,
-                primes=primes,
-                deductions=deductions,
-                net_a_payer=salaire_base + primes - deductions
+                description="Augmenter la couverture de tests de 20%",
+                date_limite=date(2024, 6, 30),
+                realise=random.choice([True, False])
             )
 
         self.stdout.write('Creating Formations...')
@@ -184,6 +212,22 @@ class Command(BaseCommand):
                 statut="Inscrit"
             )
 
+        self.stdout.write('Creating HR Documents...')
+        for emp in employes[:8]:
+            DocumentRH.objects.create(
+                employe=emp,
+                titre=f"Contrat de travail - {emp.nom}",
+                fichier="documents_rh/dummy_contrat.pdf",
+                type_doc="CONTRAT"
+            )
+            if random.random() > 0.5:
+                DocumentRH.objects.create(
+                    employe=emp,
+                    titre=f"Pièce d'identité - {emp.nom}",
+                    fichier="documents_rh/dummy_id.pdf",
+                    type_doc="PIECE_IDENTITE"
+                )
+
         self.stdout.write('Creating Job Offers and Applications...')
         offre = OffreEmploi.objects.create(
             titre="Développeur Python/Django",
@@ -195,6 +239,7 @@ class Command(BaseCommand):
             nom="Martin",
             prenom="Paul",
             email="paul.martin@test.com",
+            cv="cvs/dummy_cv.pdf",
             lettre_motivation="Je suis très motivé !",
             statut="Nouveau"
         )

@@ -1,0 +1,102 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Département : {{ departement.nom }}{% endblock %}
+{% block page_title %}Détails du département{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Dept Info -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="h-32 bg-gradient-to-r from-primary-600 to-indigo-600"></div>
+            <div class="px-6 pb-6">
+                <div class="relative flex justify-center">
+                    <div class="-mt-16 w-32 h-32 rounded-2xl bg-white p-1 shadow-lg">
+                        <div class="w-full h-full rounded-xl bg-slate-100 flex items-center justify-center text-4xl font-bold text-primary-600 border-2 border-slate-50">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <h2 class="text-2xl font-bold text-slate-900">{{ departement.nom }}</h2>
+                    <p class="text-primary-600 font-medium">Code: {{ departement.code }}</p>
+                    <div class="flex items-center justify-center gap-2 mt-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                            {{ departement.num_employees }} Employés
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                            {{ postes.count }} Postes
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-50 grid grid-cols-2 gap-4">
+                    <a href="{% url 'employees:departement_update' departement.pk %}" class="flex items-center justify-center px-4 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all">
+                        Modifier
+                    </a>
+                    <a href="{% url 'employees:departement_delete' departement.pk %}" class="flex items-center justify-center px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100 transition-all">
+                        Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-primary-900 rounded-2xl p-6 text-white shadow-xl shadow-primary-900/20">
+            <h3 class="font-bold mb-2">Aperçu rapide</h3>
+            <p class="text-primary-100 text-sm leading-relaxed opacity-80">
+                Ce département regroupe l'ensemble des postes et collaborateurs liés à {{ departement.nom|lower }}.
+            </p>
+        </div>
+    </div>
+
+    <!-- Right Column: Postes -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-id-badge text-primary-500"></i>
+                    Postes rattachés
+                </h3>
+                <a href="{% url 'employees:poste_create' %}?departement={{ departement.id }}" class="text-sm font-bold text-primary-600 hover:text-primary-700">
+                    + Ajouter un poste
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50">
+                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Titre du poste</th>
+                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Effectif</th>
+                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for poste in postes %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-4 font-medium text-slate-800">{{ poste.titre }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">
+                                    {{ poste.num_employees }} employés
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{% url 'employees:employee_list' %}?q={{ poste.titre }}" class="text-slate-400 hover:text-primary-600 transition-colors">
+                                    <i class="far fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-12 text-center text-slate-400 italic">
+                                Aucun poste défini pour ce département.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

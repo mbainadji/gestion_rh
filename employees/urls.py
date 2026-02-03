@@ -16,6 +16,9 @@ urlpatterns = [
     # Départements
     path('departements/', views.departement_list, name='departement_list'),
     path('departements/add/', views.departement_create, name='departement_create'),
+    path('departements/<int:pk>/', views.departement_detail, name='departement_detail'),
+    path('departements/<int:pk>/edit/', views.departement_update, name='departement_update'),
+    path('departements/<int:pk>/delete/', views.departement_delete, name='departement_delete'),
     
     # Postes
     path('postes/', views.poste_list, name='poste_list'),

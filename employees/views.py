@@ -94,15 +94,47 @@ def departement_list(request):
     return render(request, 'employees/departement_list.html', {'departements': departements})
 
 @login_required
+def departement_detail(request, pk):
+    departement = get_object_or_404(Departement.objects.annotate(num_employees=Count('postes__employes')), pk=pk)
+    postes = departement.postes.annotate(num_employees=Count('employes'))
+    return render(request, 'employees/departement_detail.html', {
+        'departement': departement,
+        'postes': postes,
+    })
+
+@login_required
 def departement_create(request):
     if request.method == 'POST':
         form = DepartementForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Département créé avec succès.")
             return redirect('employees:departement_list')
     else:
         form = DepartementForm()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Créer un département"})
+
+@login_required
+def departement_update(request, pk):
+    departement = get_object_or_404(Departement, pk=pk)
+    if request.method == 'POST':
+        form = DepartementForm(request.POST, instance=departement)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Département mis à jour.")
+            return redirect('employees:departement_list')
+    else:
+        form = DepartementForm(instance=departement)
+    return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier le département"})
+
+@login_required
+def departement_delete(request, pk):
+    departement = get_object_or_404(Departement, pk=pk)
+    if request.method == 'POST':
+        departement.delete()
+        messages.success(request, "Département supprimé.")
+        return redirect('employees:departement_list')
+    return render(request, 'employees/confirm_delete.html', {'object': departement})
 
 # Gestion des Postes
 @login_required
