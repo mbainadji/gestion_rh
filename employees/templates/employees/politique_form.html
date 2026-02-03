@@ -1,24 +1,44 @@
 {% extends 'employees/base.html' %}
 
 {% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>{{ title }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div style="margin-bottom: 15px;">
-            <label>Nom du Type de Contrat :</label><br>
-            <input type="text" name="nom" required style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-50 bg-slate-50/50">
+            <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-file-contract text-primary-500"></i>
+                Configuration du Contrat
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Définissez les paramètres du nouveau type de contrat.</p>
         </div>
-        <div style="margin-bottom: 15px;">
-            <label>Description :</label><br>
-            <textarea name="description" rows="5" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #ddd;"></textarea>
-        </div>
-        <div style="margin-top: 20px;">
-            <button type="submit" class="btn">Enregistrer</button>
-            <a href="{% url 'employees:politique_list' %}" class="btn" style="background: #95a5a6;">Annuler</a>
-        </div>
-    </form>
+        
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-1.5">
+                <label class="block text-sm font-semibold text-slate-700">Nom du Type de Contrat</label>
+                <input type="text" name="nom" required placeholder="Ex: CDI, CDD, Stage..." 
+                       class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-transparent transition-all outline-none">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-sm font-semibold text-slate-700">Description</label>
+                <textarea name="description" rows="5" placeholder="Décrivez les spécificités de ce contrat..." 
+                          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-transparent transition-all outline-none resize-none"></textarea>
+            </div>
+
+            <div class="pt-6 border-t border-slate-50 flex items-center gap-3">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all duration-200 shadow-lg shadow-primary-900/10 gap-2">
+                    <i class="fas fa-check"></i>
+                    Enregistrer le modèle
+                </button>
+                <a href="{% url 'employees:politique_list' %}" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
