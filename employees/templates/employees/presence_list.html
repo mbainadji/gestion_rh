@@ -8,13 +8,13 @@
     <!-- Header with Actions -->
     <div class="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
         <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <i class="fas fa-user-clock text-primary-500"></i>
+            <i class="fas fa-user-clock text-brand"></i>
             Suivi des présences
             <span class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-600">
                 {{ presences.count }} enregistrements
             </span>
         </h2>
-        <a href="{% url 'employees:presence_create' %}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-all duration-200 shadow-lg shadow-primary-900/10 gap-2">
+        <a href="{% url 'employees:presence_create' %}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand/10 gap-2">
             <i class="fas fa-plus-circle"></i>
             Enregistrer pointage
         </a>
@@ -37,7 +37,7 @@
                 <tr class="hover:bg-slate-50/80 transition-colors group">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-brand-light flex items-center justify-center text-brand font-bold text-xs">
                                 {{ p.employe.prenom|slice:":1" }}{{ p.employe.nom|slice:":1" }}
                             </div>
                             <div class="ml-3">
@@ -57,7 +57,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         {% if p.heure_depart %}
                         <div class="flex items-center gap-2">
-                            <i class="far fa-clock text-amber-500 text-xs"></i>
+                            <i class="far fa-clock text-accent text-xs"></i>
                             <span class="text-sm font-semibold text-slate-700">{{ p.heure_depart|time:"H:i" }}</span>
                         </div>
                         {% else %}
@@ -66,7 +66,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         {% if p.heures_sup > 0 %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium bg-brand-light text-brand border border-brand-light">
                             +{{ p.heures_sup }} h
                         </span>
                         {% else %}

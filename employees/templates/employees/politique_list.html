@@ -15,7 +15,7 @@
                     {{ types_contrat.count }} modèles
                 </span>
             </h2>
-            <a href="{% url 'employees:politique_create' %}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-all duration-200 shadow-lg shadow-primary-900/10 gap-2">
+            <a href="{% url 'employees:politique_create' %}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand/10 gap-2">
                 <i class="fas fa-plus-circle"></i>
                 Nouveau contrat
             </a>
@@ -23,9 +23,9 @@
 
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for tc in types_contrat %}
-            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:border-primary-200 hover:bg-white transition-all duration-200 group">
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:border-brand-light hover:bg-white transition-all duration-200 group">
                 <div class="flex items-start justify-between mb-3">
-                    <div class="p-2 rounded-lg bg-white shadow-sm text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-colors">
+                    <div class="p-2 rounded-lg bg-white shadow-sm text-brand group-hover:bg-brand group-hover:text-white transition-colors">
                         <i class="fas fa-briefcase"></i>
                     </div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Modèle</span>
@@ -45,18 +45,18 @@
     </div>
 
     <!-- Info Box -->
-    <div class="bg-primary-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-xl shadow-primary-900/20">
+    <div class="bg-brand-dark rounded-2xl p-8 text-white relative overflow-hidden shadow-xl shadow-brand-dark/20">
         <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
-            <div class="w-16 h-16 rounded-2xl bg-primary-800/50 flex items-center justify-center text-3xl">
+            <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-3xl">
                 <i class="fas fa-shield-halved"></i>
             </div>
             <div class="flex-1 text-center md:text-left">
                 <h3 class="text-xl font-bold mb-2">Règles Internes & Gouvernance</h3>
-                <p class="text-primary-100 text-sm max-w-2xl">
+                <p class="text-brand-light text-sm max-w-2xl">
                     Les politiques relatives aux congés, primes, heures supplémentaires et au code de conduite sont centralisées dans le module d'administration pour garantir la conformité et la sécurité des données.
                 </p>
             </div>
-            <a href="/admin/" class="px-6 py-3 bg-white text-primary-900 rounded-xl font-bold hover:bg-primary-50 transition-colors shadow-lg">
+            <a href="/admin/" class="px-6 py-3 bg-white text-brand-dark rounded-xl font-bold hover:bg-brand-light transition-colors shadow-lg">
                 Gérer via Admin
             </a>
         </div>

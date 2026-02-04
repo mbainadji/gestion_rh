@@ -9,7 +9,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="p-6 border-b border-slate-50 bg-slate-50/50">
             <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-filter text-primary-500"></i>
+                <i class="fas fa-filter text-brand"></i>
                 Filtrer par Département
             </h2>
         </div>
@@ -17,7 +17,7 @@
             <form method="get" class="flex flex-col md:flex-row gap-4 items-end">
                 <div class="flex-1 w-full">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Département</label>
-                    <select name="departement" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border-transparent transition-all outline-none">
+                    <select name="departement" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:bg-white focus:border-transparent transition-all outline-none">
                         <option value="">Sélectionner un département...</option>
                         {% for dept in departements %}
                         <option value="{{ dept.id }}" {% if selected_dept == dept.id|stringformat:"s" %}selected{% endif %}>{{ dept.nom }}</option>
@@ -38,7 +38,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-50 bg-slate-50/50">
                 <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-clock text-primary-500"></i>
+                    <i class="fas fa-clock text-brand"></i>
                     Détails du pointage
                 </h2>
             </div>
@@ -46,17 +46,17 @@
                 <div class="space-y-1.5">
                     <label class="block text-sm font-semibold text-slate-700">Date</label>
                     <input type="date" name="date" required value="{% now 'Y-m-d' %}" 
-                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all outline-none">
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:bg-white transition-all outline-none">
                 </div>
                 <div class="space-y-1.5">
                     <label class="block text-sm font-semibold text-slate-700">Heure d'arrivée</label>
                     <input type="time" name="heure_arrivee" value="08:00" 
-                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all outline-none">
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:bg-white transition-all outline-none">
                 </div>
                 <div class="space-y-1.5">
                     <label class="block text-sm font-semibold text-slate-700">Heure de départ</label>
                     <input type="time" name="heure_depart" value="17:00" 
-                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all outline-none">
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand focus:bg-white transition-all outline-none">
                 </div>
             </div>
         </div>
@@ -64,11 +64,11 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                 <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-users text-primary-500"></i>
+                    <i class="fas fa-users text-brand"></i>
                     Employés présents
                 </h2>
-                <label class="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer hover:text-primary-600 transition-colors">
-                    <input type="checkbox" onclick="toggleAll(this)" class="rounded text-primary-600 focus:ring-primary-500">
+                <label class="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer hover:text-brand transition-colors">
+                    <input type="checkbox" onclick="toggleAll(this)" class="rounded text-brand focus:ring-brand">
                     Tout sélectionner
                 </label>
             </div>
@@ -85,7 +85,7 @@
                         {% for emp in employees %}
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4">
-                                <input type="checkbox" name="employees" value="{{ emp.id }}" class="emp-checkbox rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                <input type="checkbox" name="employees" value="{{ emp.id }}" class="emp-checkbox rounded text-brand focus:ring-brand w-4 h-4">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ emp.matricule }}</span>
@@ -105,7 +105,7 @@
                 </table>
             </div>
             <div class="p-6 bg-slate-50/50 border-t border-slate-50 flex items-center gap-3">
-                <button type="submit" class="flex-1 md:flex-none px-8 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-900/20">
+                <button type="submit" class="flex-1 md:flex-none px-8 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20">
                     Enregistrer les présences
                 </button>
                 <a href="{% url 'employees:presence_list' %}" class="px-6 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition-all">
@@ -115,12 +115,12 @@
         </div>
     </form>
     {% else %}
-    <div class="bg-primary-50 border border-primary-100 rounded-2xl p-12 text-center">
-        <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-primary-500 mx-auto mb-4">
+    <div class="bg-brand-light/30 border border-brand-light rounded-2xl p-12 text-center">
+        <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-brand mx-auto mb-4">
             <i class="fas fa-arrow-up text-2xl"></i>
         </div>
-        <h3 class="text-primary-900 font-bold text-lg mb-1">Sélectionnez un département</h3>
-        <p class="text-primary-700 text-sm">Veuillez choisir un département ci-dessus pour afficher la liste des employés à pointer.</p>
+        <h3 class="text-brand-dark font-bold text-lg mb-1">Sélectionnez un département</h3>
+        <p class="text-slate-600 text-sm">Veuillez choisir un département ci-dessus pour afficher la liste des employés à pointer.</p>
     </div>
     {% endif %}
 </div>

@@ -8,7 +8,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="p-6 border-b border-slate-50 bg-slate-50/50">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                <i class="fas fa-edit text-primary-500"></i>
+                <i class="fas fa-edit text-brand"></i>
                 Informations de l'employé
             </h2>
             <p class="text-xs text-slate-500 mt-1">Veuillez renseigner tous les champs obligatoires.</p>
@@ -42,7 +42,7 @@
                         {# Note: In a real Django app, we might use django-widget-tweaks or custom widgets #}
                         {# Since I cannot change the widgets in models/forms easily, I will rely on basic rendering or suggest the user uses tweaks #}
                         {# For this task, I will wrap them in a styled div or apply classes if possible via JS if needed, but let's try direct rendering first #}
-                        <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-50 [&>input]:border [&>input]:border-slate-200 [&>input]:rounded-xl [&>input]:transition-all [&>input]:focus:ring-2 [&>input]:focus:ring-primary-500 [&>input]:focus:bg-white [&>input]:focus:border-transparent [&>select]:w-full [&>select]:px-4 [&>select]:py-2.5 [&>select]:bg-slate-50 [&>select]:border [&>select]:border-slate-200 [&>select]:rounded-xl [&>textarea]:w-full [&>textarea]:px-4 [&>textarea]:py-2.5 [&>textarea]:bg-slate-50 [&>textarea]:border [&>textarea]:border-slate-200 [&>textarea]:rounded-xl">
+                        <div class="[&>input]:w-full [&>input]:px-4 [&>input]:py-2.5 [&>input]:bg-slate-50 [&>input]:border [&>input]:border-slate-200 [&>input]:rounded-xl [&>input]:transition-all [&>input]:focus:ring-2 [&>input]:focus:ring-brand [&>input]:focus:bg-white [&>input]:focus:border-transparent [&>select]:w-full [&>select]:px-4 [&>select]:py-2.5 [&>select]:bg-slate-50 [&>select]:border [&>select]:border-slate-200 [&>select]:rounded-xl [&>textarea]:w-full [&>textarea]:px-4 [&>textarea]:py-2.5 [&>textarea]:bg-slate-50 [&>textarea]:border [&>textarea]:border-slate-200 [&>textarea]:rounded-xl">
                             {{ field }}
                         </div>
                     </div>
@@ -59,7 +59,7 @@
             </div>
 
             <div class="pt-6 border-t border-slate-50 flex items-center gap-3">
-                <button type="submit" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-all duration-200 shadow-lg shadow-primary-900/10 gap-2">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all duration-200 shadow-lg shadow-brand/10 gap-2">
                     <i class="fas fa-check"></i>
                     Enregistrer les modifications
                 </button>
