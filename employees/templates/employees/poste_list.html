@@ -49,11 +49,14 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="#" class="p-2 text-brand hover:bg-brand-light rounded-lg transition-colors" title="Détails">
+                            <a href="{% url 'employees:poste_detail' poste.pk %}" class="p-2 text-brand hover:bg-brand-light rounded-lg transition-colors" title="Détails">
                                 <i class="far fa-eye"></i>
                             </a>
-                            <a href="#" class="p-2 text-accent hover:bg-accent-light rounded-lg transition-colors" title="Modifier">
+                            <a href="{% url 'employees:poste_update' poste.pk %}" class="p-2 text-accent hover:bg-accent-light rounded-lg transition-colors" title="Modifier">
                                 <i class="far fa-edit"></i>
+                            </a>
+                            <a href="{% url 'employees:poste_delete' poste.pk %}" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Supprimer">
+                                <i class="far fa-trash-can"></i>
                             </a>
                         </div>
                     </td>

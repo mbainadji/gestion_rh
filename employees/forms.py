@@ -86,4 +86,4 @@ class CandidatureForm(forms.ModelForm):
 class DocumentRHForm(forms.ModelForm):
     class Meta:
         model = DocumentRH
-        fields = '__all__'
+        fields = ['titre', 'fichier', 'type_doc']

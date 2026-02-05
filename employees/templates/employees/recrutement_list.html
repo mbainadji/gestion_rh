@@ -64,11 +64,14 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <a href="#" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-brand-light hover:text-brand rounded-2xl transition-all shadow-sm">
+                    <a href="{% url 'employees:recrutement_detail' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-brand-light hover:text-brand rounded-2xl transition-all shadow-sm">
                         <i class="far fa-eye"></i>
                     </a>
-                    <a href="#" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-2xl transition-all shadow-sm">
+                    <a href="{% url 'employees:recrutement_update' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-2xl transition-all shadow-sm">
                         <i class="far fa-edit"></i>
+                    </a>
+                    <a href="{% url 'employees:recrutement_delete' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
+                        <i class="far fa-trash-can"></i>
                     </a>
                 </div>
             </div>

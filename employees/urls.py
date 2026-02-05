@@ -12,6 +12,7 @@ urlpatterns = [
     path('employees/<int:pk>/', views.employee_detail, name='employee_detail'),
     path('employees/<int:pk>/edit/', views.employee_update, name='employee_update'),
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+    path('employees/<int:employee_pk>/documents/add/', views.document_create, name='document_create'),
     
     # Départements
     path('departements/', views.departement_list, name='departement_list'),
@@ -23,6 +24,9 @@ urlpatterns = [
     # Postes
     path('postes/', views.poste_list, name='poste_list'),
     path('postes/add/', views.poste_create, name='poste_create'),
+    path('postes/<int:pk>/', views.poste_detail, name='poste_detail'),
+    path('postes/<int:pk>/edit/', views.poste_update, name='poste_update'),
+    path('postes/<int:pk>/delete/', views.poste_delete, name='poste_delete'),
     
     # Congés
     path('conges/', views.conge_list, name='conge_list'),
@@ -45,6 +49,9 @@ urlpatterns = [
     # Recrutement
     path('recrutements/', views.recrutement_list, name='recrutement_list'),
     path('recrutements/add/', views.recrutement_create, name='recrutement_create'),
+    path('recrutements/<int:pk>/', views.recrutement_detail, name='recrutement_detail'),
+    path('recrutements/<int:pk>/edit/', views.recrutement_update, name='recrutement_update'),
+    path('recrutements/<int:pk>/delete/', views.recrutement_delete, name='recrutement_delete'),
     
     # Export
     path('employees/export/csv/', views.export_employees_csv, name='export_employees_csv'),

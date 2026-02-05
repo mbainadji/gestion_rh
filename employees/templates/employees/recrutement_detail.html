@@ -1,0 +1,145 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Détails de l'Offre | {{ offre.titre }}{% endblock %}
+{% block page_title %}Gestion Recrutement{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <a href="{% url 'employees:recrutement_list' %}" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-brand transition-colors">
+            <i class="fas fa-arrow-left"></i> Retour aux offres
+        </a>
+        <div class="flex gap-3 w-full md:w-auto">
+            <a href="{% url 'employees:recrutement_update' offre.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20">
+                <i class="far fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'employees:recrutement_delete' offre.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-rose-50 text-rose-500 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition-all">
+                <i class="far fa-trash-can"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+                {% if not offre.cloturee %}
+                <div class="absolute top-0 right-0 px-8 py-3 bg-emerald-500 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-bl-3xl">
+                    Offre Ouverte
+                </div>
+                {% else %}
+                <div class="absolute top-0 right-0 px-8 py-3 bg-slate-200 text-slate-500 text-[11px] font-black uppercase tracking-[0.2em] rounded-bl-3xl">
+                    Clôturée
+                </div>
+                {% endif %}
+
+                <div class="mb-10">
+                    <p class="text-brand font-black text-xs uppercase tracking-[0.3em] mb-2">{{ offre.departement.nom }}</p>
+                    <h2 class="text-4xl font-display font-black text-slate-800 leading-tight">{{ offre.titre }}</h2>
+                </div>
+
+                <div class="prose prose-slate max-w-none">
+                    <h4 class="text-slate-800 font-bold mb-4 flex items-center gap-2 text-lg">
+                        <i class="fas fa-align-left text-brand"></i> Description du poste
+                    </h4>
+                    <div class="text-slate-600 leading-relaxed text-lg">
+                        {{ offre.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidatures List -->
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accent-light text-accent flex items-center justify-center">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        Candidatures Reçues
+                        <span class="ml-2 px-3 py-1 bg-white text-accent font-black rounded-lg text-xs border border-accent-light/50">
+                            {{ candidatures.count }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="divide-y divide-slate-50">
+                    {% for cand in candidatures %}
+                    <div class="p-8 hover:bg-slate-50/50 transition-colors group">
+                        <div class="flex flex-col md:flex-row justify-between gap-6">
+                            <div class="flex gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xl group-hover:bg-brand group-hover:text-white transition-all">
+                                    {{ cand.prenom|slice:":1" }}{{ cand.nom|slice:":1" }}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-slate-800 mb-1">{{ cand.prenom }} {{ cand.nom }}</h4>
+                                    <div class="flex flex-wrap gap-4 items-center">
+                                        <span class="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <i class="far fa-envelope text-slate-300"></i> {{ cand.email }}
+                                        </span>
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase">
+                                            {{ cand.statut }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                {% if cand.cv %}
+                                <a href="{{ cand.cv.url }}" target="_blank" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:border-brand hover:text-brand transition-all flex items-center gap-2">
+                                    <i class="far fa-file-pdf"></i> Voir CV
+                                </a>
+                                {% endif %}
+                                <button class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-400 hover:bg-brand-light hover:text-brand rounded-xl transition-all">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-20 text-center">
+                        <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6">
+                            <i class="fas fa-users-slash text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-800">Aucune candidature</h4>
+                        <p class="text-sm text-slate-400 font-medium">Partagez l'offre pour attirer des candidats.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="space-y-8">
+            <div class="bg-accent-dark rounded-[2.5rem] p-8 text-white shadow-xl shadow-accent/20">
+                <h3 class="text-xs font-black text-accent-light uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                    <i class="fas fa-circle-info"></i> Détails de l'offre
+                </h3>
+                <div class="space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-accent-light">
+                            <i class="far fa-calendar"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-accent-light/50 uppercase tracking-widest leading-none mb-1">Publiée le</p>
+                            <p class="font-bold text-sm">{{ offre.date_publication|date:"d F Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-accent-light">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-accent-light/50 uppercase tracking-widest leading-none mb-1">Département</p>
+                            <p class="font-bold text-sm">{{ offre.departement.nom }}</p>
+                        </div>
+                    </div>
+                    <div class="pt-8 border-t border-white/10">
+                        <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
+                            <p class="text-[10px] font-black text-accent-light/50 uppercase tracking-widest text-center mb-2">Total Candidatures</p>
+                            <p class="text-4xl font-display font-black text-center text-white">{{ offre.num_candidatures }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

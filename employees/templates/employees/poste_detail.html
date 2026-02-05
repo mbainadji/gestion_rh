@@ -1,0 +1,112 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Détails du Poste | {{ poste.titre }}{% endblock %}
+{% block page_title %}Détails du Poste{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <a href="{% url 'employees:poste_list' %}" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-brand transition-colors">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+        <div class="flex gap-3 w-full md:w-auto">
+            <a href="{% url 'employees:poste_update' poste.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20">
+                <i class="far fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'employees:poste_delete' poste.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-rose-50 text-rose-500 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition-all">
+                <i class="far fa-trash-can"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Info -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+                <div class="flex items-start gap-6 mb-8">
+                    <div class="w-20 h-20 rounded-3xl bg-brand-light flex items-center justify-center text-brand text-3xl shadow-inner">
+                        <i class="fas fa-id-badge"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-slate-800">{{ poste.titre }}</h2>
+                        <p class="text-brand font-bold text-sm uppercase tracking-widest mt-1">{{ poste.departement.nom }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Missions</h4>
+                        <div class="prose prose-slate max-w-none text-slate-600">
+                            {{ poste.missions|linebreaks|default:"Aucune mission définie." }}
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-slate-50">
+                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Responsabilités</h4>
+                        <div class="prose prose-slate max-w-none text-slate-600">
+                            {{ poste.responsabilites|linebreaks|default:"Aucune responsabilité définie." }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employees in this position -->
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-8 border-b border-slate-50">
+                    <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accent-light text-accent flex items-center justify-center">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        Collaborateurs à ce poste
+                        <span class="ml-auto px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-bold">
+                            {{ employees.count }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for emp in employees %}
+                        <a href="{% url 'employees:employee_detail' emp.pk %}" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-brand-light hover:bg-white transition-all group">
+                            <div class="w-12 h-12 rounded-xl bg-white text-brand shadow-sm flex items-center justify-center font-bold">
+                                {{ emp.prenom|slice:":1" }}{{ emp.nom|slice:":1" }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">{{ emp.prenom }} {{ emp.nom }}</p>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{{ emp.matricule }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right ml-auto text-slate-300 group-hover:text-brand transition-colors"></i>
+                        </a>
+                        {% empty %}
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-sm text-slate-400 font-medium italic">Aucun collaborateur n'est actuellement affecté à ce poste.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar stats/info -->
+        <div class="space-y-8">
+            <div class="bg-brand-dark rounded-[2.5rem] p-8 text-white shadow-xl shadow-brand/20">
+                <h3 class="text-xs font-black text-brand-light uppercase tracking-[0.2em] mb-6">Aperçu rapide</h3>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-[10px] font-bold text-brand-light/50 uppercase mb-1">Département</p>
+                        <p class="font-bold">{{ poste.departement.nom }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-brand-light/50 uppercase mb-1">Code Département</p>
+                        <p class="font-bold">{{ poste.departement.code }}</p>
+                    </div>
+                    <div class="pt-6 border-t border-white/10">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-brand-light/70">Effectif actuel</span>
+                            <span class="text-2xl font-black">{{ poste.num_employees }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

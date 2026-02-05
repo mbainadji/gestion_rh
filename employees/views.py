@@ -87,6 +87,21 @@ def employee_delete(request, pk):
         return redirect('employees:employee_list')
     return render(request, 'employees/confirm_delete.html', {'object': employee})
 
+@login_required
+def document_create(request, employee_pk):
+    employee = get_object_or_404(Employe, pk=employee_pk)
+    if request.method == 'POST':
+        form = DocumentRHForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.employe = employee
+            document.save()
+            messages.success(request, "Document ajouté avec succès.")
+            return redirect('employees:employee_detail', pk=employee_pk)
+    else:
+        form = DocumentRHForm(initial={'employe': employee})
+    return render(request, 'employees/employee_form.html', {'form': form, 'title': "Ajouter un document"})
+
 # Gestion des Départements
 @login_required
 def departement_list(request):
@@ -148,10 +163,39 @@ def poste_create(request):
         form = PosteForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Poste créé avec succès.")
             return redirect('employees:poste_list')
     else:
         form = PosteForm()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Créer un poste"})
+
+@login_required
+def poste_detail(request, pk):
+    poste = get_object_or_404(Poste.objects.select_related('departement').annotate(num_employees=Count('employes')), pk=pk)
+    employees = poste.employes.all()
+    return render(request, 'employees/poste_detail.html', {'poste': poste, 'employees': employees})
+
+@login_required
+def poste_update(request, pk):
+    poste = get_object_or_404(Poste, pk=pk)
+    if request.method == 'POST':
+        form = PosteForm(request.POST, instance=poste)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Poste mis à jour.")
+            return redirect('employees:poste_list')
+    else:
+        form = PosteForm(instance=poste)
+    return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier le poste"})
+
+@login_required
+def poste_delete(request, pk):
+    poste = get_object_or_404(Poste, pk=pk)
+    if request.method == 'POST':
+        poste.delete()
+        messages.success(request, "Poste supprimé.")
+        return redirect('employees:poste_list')
+    return render(request, 'employees/confirm_delete.html', {'object': poste})
 
 # Gestion des Congés
 @login_required
@@ -291,10 +335,39 @@ def recrutement_create(request):
         form = OffreEmploiForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Offre d'emploi publiée.")
             return redirect('employees:recrutement_list')
     else:
         form = OffreEmploiForm()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Publier une offre"})
+
+@login_required
+def recrutement_detail(request, pk):
+    offre = get_object_or_404(OffreEmploi.objects.annotate(num_candidatures=Count('candidatures')), pk=pk)
+    candidatures = offre.candidatures.all()
+    return render(request, 'employees/recrutement_detail.html', {'offre': offre, 'candidatures': candidatures})
+
+@login_required
+def recrutement_update(request, pk):
+    offre = get_object_or_404(OffreEmploi, pk=pk)
+    if request.method == 'POST':
+        form = OffreEmploiForm(request.POST, instance=offre)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Offre d'emploi mise à jour.")
+            return redirect('employees:recrutement_list')
+    else:
+        form = OffreEmploiForm(instance=offre)
+    return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier l'offre"})
+
+@login_required
+def recrutement_delete(request, pk):
+    offre = get_object_or_404(OffreEmploi, pk=pk)
+    if request.method == 'POST':
+        offre.delete()
+        messages.success(request, "Offre d'emploi supprimée.")
+        return redirect('employees:recrutement_list')
+    return render(request, 'employees/confirm_delete.html', {'object': offre})
 
 # Intégrations / Export
 import csv

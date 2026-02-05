@@ -96,118 +96,212 @@
 
         <!-- Main Content Area -->
         <div class="lg:col-span-2 space-y-8">
-            <!-- Tabs Navigation (Visual only for now) -->
-            <div class="flex gap-2 p-1.5 bg-white rounded-2xl shadow-sm border border-slate-100 inline-flex">
-                <button class="px-6 py-2.5 bg-brand text-white rounded-xl text-sm font-bold shadow-lg shadow-brand/20 transition-all">Général</button>
-                <button class="px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Formations</button>
-                <button class="px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Évaluations</button>
-                <button class="px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Documents</button>
+            <!-- Tabs Navigation -->
+            <div class="flex gap-2 p-1.5 bg-white rounded-2xl shadow-sm border border-slate-100 inline-flex" id="tabs">
+                <button onclick="switchTab('general')" id="tab-general" class="tab-btn px-6 py-2.5 bg-brand text-white rounded-xl text-sm font-bold shadow-lg shadow-brand/20 transition-all">Général</button>
+                <button onclick="switchTab('formations')" id="tab-formations" class="tab-btn px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Formations</button>
+                <button onclick="switchTab('evaluations')" id="tab-evaluations" class="tab-btn px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Évaluations</button>
+                <button onclick="switchTab('documents')" id="tab-documents" class="tab-btn px-6 py-2.5 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">Documents</button>
             </div>
 
-            <!-- Active Contract Section -->
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                <div class="p-8 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center">
-                            <i class="fas fa-file-contract"></i>
-                        </div>
-                        Contrats de travail
-                    </h3>
+            <!-- Tab: Général -->
+            <div id="content-general" class="tab-content space-y-8">
+                <!-- Active Contract Section -->
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            Contrats de travail
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-slate-50/50">
+                                    <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
+                                    <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Période</th>
+                                    <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for contrat in contrats %}
+                                <tr class="group">
+                                    <td class="px-8 py-5 text-sm font-bold text-slate-700">{{ contrat.type_contrat }}</td>
+                                    <td class="px-8 py-5 text-sm font-medium text-slate-500">
+                                        {{ contrat.date_debut|date:"M Y" }} <span class="mx-2 text-slate-300">→</span> {{ contrat.date_fin|date:"M Y"|default:"Indéterminé" }}
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        {% if contrat.actif %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">Actif</span>
+                                        {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-slate-50 text-slate-400 border border-slate-100">Terminé</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="px-8 py-10 text-center text-slate-400 italic text-sm">Aucun historique de contrat.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Période</th>
-                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            {% for contrat in contrats %}
-                            <tr class="group">
-                                <td class="px-8 py-5 text-sm font-bold text-slate-700">{{ contrat.type_contrat }}</td>
-                                <td class="px-8 py-5 text-sm font-medium text-slate-500">
-                                    {{ contrat.date_debut|date:"M Y" }} <span class="mx-2 text-slate-300">→</span> {{ contrat.date_fin|date:"M Y"|default:"Indéterminé" }}
-                                </td>
-                                <td class="px-8 py-5 text-right">
-                                    {% if contrat.actif %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">Actif</span>
-                                    {% else %}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase bg-slate-50 text-slate-400 border border-slate-100">Terminé</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
+            </div>
+
+            <!-- Tab: Formations -->
+            <div id="content-formations" class="tab-content hidden space-y-8">
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-50">
+                        <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            Parcours de formation
+                        </h3>
+                    </div>
+                    <div class="p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for inscription in employee.formations.all %}
+                            <div class="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="px-3 py-1 bg-brand-light text-brand rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                        {{ inscription.statut }}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 mb-2">{{ inscription.formation.titre }}</h4>
+                                <p class="text-xs text-slate-500 mb-4">{{ inscription.formation.description|truncatewords:20 }}</p>
+                                <div class="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase">
+                                    <span><i class="far fa-calendar mr-1"></i> {{ inscription.formation.date_debut|date:"d/m/y" }}</span>
+                                    <span><i class="fas fa-arrow-right mx-1"></i></span>
+                                    <span>{{ inscription.formation.date_fin|date:"d/m/y" }}</span>
+                                </div>
+                            </div>
                             {% empty %}
-                            <tr>
-                                <td colspan="3" class="px-8 py-10 text-center text-slate-400 italic text-sm">Aucun historique de contrat.</td>
-                            </tr>
+                            <div class="col-span-full text-center py-12">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4">
+                                    <i class="fas fa-graduation-cap text-2xl"></i>
+                                </div>
+                                <p class="text-sm text-slate-400 font-medium">Aucune formation enregistrée</p>
+                            </div>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Grid for Documents and Perf -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Documents Card -->
+            <!-- Tab: Évaluations -->
+            <div id="content-evaluations" class="tab-content hidden space-y-8">
                 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
-                        <h3 class="font-display font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-folder-open text-brand"></i> Documents
+                    <div class="p-8 border-b border-slate-50">
+                        <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center">
+                                <i class="fas fa-ranking-star"></i>
+                            </div>
+                            Historique des évaluations
                         </h3>
-                        <button class="w-8 h-8 rounded-lg bg-brand-light text-brand flex items-center justify-center hover:bg-brand hover:text-white transition-all">
-                            <i class="fas fa-plus text-xs"></i>
-                        </button>
                     </div>
-                    <div class="p-6 space-y-4">
-                        {% for doc in documents %}
-                        <a href="{{ doc.fichier.url }}" target="_blank" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-transparent hover:border-brand-light hover:bg-white transition-all group">
-                            <div class="w-10 h-10 rounded-xl bg-white text-brand shadow-sm flex items-center justify-center group-hover:bg-brand-light">
-                                <i class="far fa-file-pdf"></i>
+                    <div class="p-8">
+                        <div class="space-y-6">
+                            {% for eval in evaluations %}
+                            <div class="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col md:flex-row justify-between gap-6">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="px-3 py-1 bg-accent-light text-accent-dark rounded-lg text-[10px] font-black uppercase">
+                                            {{ eval.date|date:"d M Y" }}
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-slate-800 text-lg mb-2">Évaluation de performance</h4>
+                                    <p class="text-sm text-slate-600 mb-4">{{ eval.commentaires }}</p>
+                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Évaluateur : {{ eval.evaluateur.prenom }} {{ eval.evaluateur.nom }}</p>
+                                </div>
+                                <div class="flex flex-col items-center justify-center bg-white rounded-2xl p-6 border border-slate-100 shadow-sm min-w-[120px]">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase mb-1">Score Global</span>
+                                    <div class="text-3xl font-display font-black text-brand">{{ eval.score }}<span class="text-sm opacity-50">/100</span></div>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs font-bold text-slate-800 truncate">{{ doc.titre }}</p>
-                                <p class="text-[10px] text-slate-500 font-medium uppercase tracking-tighter">{{ doc.get_type_doc_display }}</p>
+                            {% empty %}
+                            <div class="text-center py-12">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4">
+                                    <i class="fas fa-clipboard-check text-2xl"></i>
+                                </div>
+                                <p class="text-sm text-slate-400 font-medium">Aucune évaluation disponible</p>
                             </div>
-                            <i class="fas fa-download text-slate-300 group-hover:text-brand transition-colors"></i>
-                        </a>
-                        {% empty %}
-                        <div class="text-center py-6">
-                            <i class="fas fa-cloud-upload-alt text-2xl text-slate-200 mb-2"></i>
-                            <p class="text-xs text-slate-400 font-medium">Aucun document importé</p>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
+            </div>
 
-                <!-- Evaluations Card -->
+            <!-- Tab: Documents -->
+            <div id="content-documents" class="tab-content hidden space-y-8">
                 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="p-6 border-b border-slate-50 bg-slate-50/30">
-                        <h3 class="font-display font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-ranking-star text-accent"></i> Évaluations
-                        </h3>
-                    </div>
-                    <div class="p-6 space-y-4">
-                        {% for eval in evaluations %}
-                        <div class="p-4 rounded-2xl border border-slate-100 bg-white">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="px-2 py-1 bg-accent-light text-accent-dark rounded-lg text-[9px] font-black uppercase">{{ eval.date|date:"d M Y" }}</div>
-                                <div class="text-lg font-display font-black text-brand">{{ eval.score }}<span class="text-[10px] opacity-50">/100</span></div>
+                    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center">
+                                <i class="fas fa-folder-open"></i>
                             </div>
-                            <p class="text-xs font-bold text-slate-700">Évaluation annuelle 2023</p>
-                            <p class="text-[10px] text-slate-500 mt-1">Par {{ eval.evaluateur.prenom }} {{ eval.evaluateur.nom }}</p>
+                            Documents administratifs
+                        </h3>
+                        <a href="{% url 'employees:document_create' employee.pk %}" class="px-6 py-2.5 bg-brand text-white rounded-xl text-sm font-bold hover:bg-brand-dark transition-all flex items-center gap-2">
+                            <i class="fas fa-cloud-arrow-up"></i> Importer
+                        </a>
+                    </div>
+                    <div class="p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% for doc in documents %}
+                            <div class="flex items-center gap-4 p-5 rounded-3xl bg-slate-50 border border-slate-100 hover:border-brand-light hover:bg-white transition-all group">
+                                <div class="w-12 h-12 rounded-2xl bg-white text-brand shadow-sm flex items-center justify-center group-hover:bg-brand-light transition-colors">
+                                    <i class="far fa-file-pdf text-xl"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold text-slate-800 truncate">{{ doc.titre }}</p>
+                                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{{ doc.get_type_doc_display }}</p>
+                                </div>
+                                <a href="{{ doc.fichier.url }}" target="_blank" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-brand hover:bg-brand-light transition-all">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            {% empty %}
+                            <div class="col-span-full text-center py-12">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4">
+                                    <i class="fas fa-file-invoice text-2xl"></i>
+                                </div>
+                                <p class="text-sm text-slate-400 font-medium">Aucun document disponible</p>
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% empty %}
-                        <div class="text-center py-6">
-                            <i class="fas fa-clipboard-check text-2xl text-slate-200 mb-2"></i>
-                            <p class="text-xs text-slate-400 font-medium">En attente d'évaluation</p>
-                        </div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        
+        // Show selected content
+        document.getElementById('content-' + tabName).classList.remove('hidden');
+        
+        // Reset all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('bg-brand', 'text-white', 'shadow-lg', 'shadow-brand/20');
+            btn.classList.add('text-slate-500', 'hover:bg-slate-50');
+        });
+        
+        // Style selected button
+        const activeBtn = document.getElementById('tab-' + tabName);
+        activeBtn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+        activeBtn.classList.add('bg-brand', 'text-white', 'shadow-lg', 'shadow-brand/20');
+    }
+</script>
     </div>
 </div>
 {% endblock %}
