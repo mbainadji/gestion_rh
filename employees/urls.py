@@ -45,6 +45,9 @@ urlpatterns = [
     # Formations
     path('formations/', views.formation_list, name='formation_list'),
     path('formations/add/', views.formation_create, name='formation_create'),
+    path('formations/<int:pk>/', views.formation_detail, name='formation_detail'),
+    path('formations/<int:pk>/edit/', views.formation_update, name='formation_update'),
+    path('formations/<int:pk>/delete/', views.formation_delete, name='formation_delete'),
     
     # Recrutement
     path('recrutements/', views.recrutement_list, name='recrutement_list'),

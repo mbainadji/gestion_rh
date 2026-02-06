@@ -1,6 +1,6 @@
 {% extends 'employees/base.html' %}
 
-{% block title %}Formations | ZenRH{% endblock %}
+{% block title %}Formations | PeopleFlow{% endblock %}
 {% block page_title %}Formations & Compétences{% endblock %}
 
 {% block content %}
@@ -60,9 +60,15 @@
                 </div>
             </div>
 
-            <div class="mt-8">
-                <a href="#" class="block w-full py-3 text-center bg-slate-50 hover:bg-brand-light hover:text-brand text-slate-500 rounded-xl text-xs font-bold transition-all border border-slate-100 hover:border-brand-light">
+            <div class="mt-8 flex gap-2">
+                <a href="{% url 'employees:formation_detail' f.pk %}" class="flex-1 py-3 text-center bg-slate-50 hover:bg-brand-light hover:text-brand text-slate-500 rounded-xl text-xs font-bold transition-all border border-slate-100 hover:border-brand-light">
                     Détails de la session
+                </a>
+                <a href="{% url 'employees:formation_update' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-xl transition-all border border-slate-100 hover:border-accent-light" title="Modifier">
+                    <i class="far fa-edit"></i>
+                </a>
+                <a href="{% url 'employees:formation_delete' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all border border-slate-100 hover:border-rose-100" title="Supprimer">
+                    <i class="far fa-trash-can"></i>
                 </a>
             </div>
         </div>

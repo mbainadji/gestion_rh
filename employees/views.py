@@ -9,6 +9,7 @@ from .forms import (
     PresenceForm, FichePaieForm, EvaluationForm, FormationForm,
     OffreEmploiForm, CandidatureForm, DocumentRHForm
 )
+from django.utils import timezone
 from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -18,10 +19,36 @@ def dashboard(request):
     total_employees = Employe.objects.count()
     departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
     recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
+    
+    # Anniversaires du mois en cours
+    today = timezone.now().date()
+    anniversaires = Employe.objects.filter(
+        date_naissance__month=today.month
+    ).order_by('date_naissance__day')
+    
+    # On ajoute l'age calculé pour chaque employé d'anniversaire
+    for emp in anniversaires:
+        if emp.date_naissance:
+            emp.age_a_venir = today.year - emp.date_naissance.year
+        else:
+            emp.age_a_venir = "?"
+
+    # Données pour le graphique "Semaine" (Recrutements/Arrivées récentes)
+    last_7_days = [(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
+    arrivals_per_day = []
+    for day in last_7_days:
+        count = Employe.objects.filter(date_embauche=day).count()
+        arrivals_per_day.append({
+            'day': day.strftime('%a'),
+            'count': count
+        })
+
     context = {
         'total_employees': total_employees,
         'departements': departements,
         'recent_conges': recent_conges,
+        'anniversaires': anniversaires,
+        'arrivals_per_day': arrivals_per_day,
     }
     return render(request, 'employees/dashboard.html', context)
 
@@ -318,10 +345,39 @@ def formation_create(request):
         form = FormationForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Formation créée avec succès.")
             return redirect('employees:formation_list')
     else:
         form = FormationForm()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Créer une formation"})
+
+@login_required
+def formation_detail(request, pk):
+    formation = get_object_or_404(Formation, pk=pk)
+    inscriptions = InscriptionFormation.objects.filter(formation=formation).select_related('employe')
+    return render(request, 'employees/formation_detail.html', {'formation': formation, 'inscriptions': inscriptions})
+
+@login_required
+def formation_update(request, pk):
+    formation = get_object_or_404(Formation, pk=pk)
+    if request.method == 'POST':
+        form = FormationForm(request.POST, instance=formation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Formation mise à jour.")
+            return redirect('employees:formation_list')
+    else:
+        form = FormationForm(instance=formation)
+    return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier la formation"})
+
+@login_required
+def formation_delete(request, pk):
+    formation = get_object_or_404(Formation, pk=pk)
+    if request.method == 'POST':
+        formation.delete()
+        messages.success(request, "Formation supprimée.")
+        return redirect('employees:formation_list')
+    return render(request, 'employees/confirm_delete.html', {'object': formation})
 
 # Recrutements
 @login_required

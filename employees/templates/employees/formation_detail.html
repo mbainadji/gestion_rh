@@ -1,0 +1,132 @@
+{% extends 'employees/base.html' %}
+
+{% block title %}Détails de la Formation | {{ formation.titre }}{% endblock %}
+{% block page_title %}Détails de la Formation{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <a href="{% url 'employees:formation_list' %}" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-brand transition-colors">
+            <i class="fas fa-arrow-left"></i> Retour au catalogue
+        </a>
+        <div class="flex gap-3 w-full md:w-auto">
+            <a href="{% url 'employees:formation_update' formation.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20">
+                <i class="far fa-edit"></i> Modifier
+            </a>
+            <a href="{% url 'employees:formation_delete' formation.pk %}" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-rose-50 text-rose-500 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition-all">
+                <i class="far fa-trash-can"></i> Supprimer
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div class="mb-10">
+                    <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 text-2xl mb-6 shadow-inner">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2 class="text-4xl font-display font-black text-slate-800 leading-tight">{{ formation.titre }}</h2>
+                </div>
+
+                <div class="prose prose-slate max-w-none">
+                    <h4 class="text-slate-800 font-bold mb-4 flex items-center gap-2 text-lg">
+                        <i class="fas fa-align-left text-emerald-500"></i> Description
+                    </h4>
+                    <div class="text-slate-600 leading-relaxed text-lg">
+                        {{ formation.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inscriptions List -->
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="text-xl font-display font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        Collaborateurs Inscrits
+                        <span class="ml-2 px-3 py-1 bg-white text-emerald-500 font-black rounded-lg text-xs border border-emerald-100">
+                            {{ inscriptions.count }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="divide-y divide-slate-50">
+                    {% for inscription in inscriptions %}
+                    <div class="p-8 hover:bg-slate-50/50 transition-colors group">
+                        <div class="flex flex-col md:flex-row justify-between gap-6">
+                            <div class="flex gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xl group-hover:bg-brand group-hover:text-white transition-all">
+                                    {{ inscription.employe.prenom|slice:":1" }}{{ inscription.employe.nom|slice:":1" }}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-slate-800 mb-1">{{ inscription.employe.prenom }} {{ inscription.employe.nom }}</h4>
+                                    <div class="flex flex-wrap gap-4 items-center">
+                                        <span class="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <i class="far fa-id-card text-slate-300"></i> {{ inscription.employe.matricule }}
+                                        </span>
+                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                            {{ inscription.statut }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="{% url 'employees:employee_detail' inscription.employe.pk %}" class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-400 hover:bg-brand-light hover:text-brand rounded-xl transition-all">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-20 text-center">
+                        <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6">
+                            <i class="fas fa-users-slash text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-800">Aucun inscrit</h4>
+                        <p class="text-sm text-slate-400 font-medium">Inscrivez des collaborateurs pour cette session.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="space-y-8">
+            <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-slate-900/20">
+                <h3 class="text-xs font-black text-emerald-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                    <i class="fas fa-circle-info"></i> Détails de la session
+                </h3>
+                <div class="space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400">
+                            <i class="far fa-calendar"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Période</p>
+                            <p class="font-bold text-sm">{{ formation.date_debut|date:"d M" }} - {{ formation.date_fin|date:"d M Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Budget</p>
+                            <p class="font-bold text-sm">{{ formation.budget }} €</p>
+                        </div>
+                    </div>
+                    <div class="pt-8 border-t border-white/10">
+                        <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center mb-2">Total Inscrits</p>
+                            <p class="text-4xl font-display font-black text-center text-white">{{ inscriptions.count }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

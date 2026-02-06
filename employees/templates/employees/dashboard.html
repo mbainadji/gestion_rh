@@ -1,6 +1,6 @@
 {% extends 'employees/base.html' %}
 
-{% block title %}Dashboard | ZenRH{% endblock %}
+{% block title %}Dashboard | PeopleFlow{% endblock %}
 {% block page_title %}Tableau de bord de bienvenue{% endblock %}
 
 {% block content %}
@@ -82,8 +82,8 @@
                     <p class="text-sm text-slate-500">Vue par département</p>
                 </div>
                 <div class="flex gap-2">
-                    <button class="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 hover:bg-brand-light hover:text-brand transition-all">Semaine</button>
-                    <button class="px-4 py-2 bg-brand text-white rounded-lg text-xs font-bold shadow-lg shadow-brand/20">Mois</button>
+                    <button id="btnSemaine" class="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 hover:bg-brand-light hover:text-brand transition-all">Semaine</button>
+                    <button id="btnMois" class="px-4 py-2 bg-brand text-white rounded-lg text-xs font-bold shadow-lg shadow-brand/20">Mois</button>
                 </div>
             </div>
             <div class="h-[350px]">
@@ -135,20 +135,21 @@
                 </div>
             </div>
             <div class="space-y-4">
+                {% for emp in anniversaires %}
                 <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-2xl p-3">
-                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">JD</div>
+                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                        {{ emp.prenom|slice:":1" }}{{ emp.nom|slice:":1" }}
+                    </div>
                     <div class="flex-1">
-                        <p class="text-sm font-bold">Jean Dupont</p>
-                        <p class="text-[10px] opacity-75">Le 15 Février - 32 ans</p>
+                        <p class="text-sm font-bold">{{ emp.prenom }} {{ emp.nom }}</p>
+                        <p class="text-[10px] opacity-75">Le {{ emp.date_naissance|date:"d F" }} - {{ emp.age_a_venir }} ans</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-2xl p-3">
-                    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">ML</div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold">Marie Laurent</p>
-                        <p class="text-[10px] opacity-75">Le 22 Février - 28 ans</p>
-                    </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <p class="text-xs opacity-75">Pas d'anniversaires ce mois-ci</p>
                 </div>
+                {% endfor %}
             </div>
         </div>
 
@@ -194,26 +195,35 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('deptChart').getContext('2d');
+        const btnSemaine = document.getElementById('btnSemaine');
+        const btnMois = document.getElementById('btnMois');
         
+        // Data for "Mois" (Departments)
+        const moisData = {
+            labels: [{% for dep in departements %}'{{ dep.nom }}',{% endfor %}],
+            datasets: [{
+                label: 'Effectif',
+                data: [{% for dep in departements %}{{ dep.num_employees }},{% endfor %}],
+            }]
+        };
+
+        // Data for "Semaine" (Arrivals)
+        const semaineData = {
+            labels: [{% for arrival in arrivals_per_day %}'{{ arrival.day }}',{% endfor %}],
+            datasets: [{
+                label: 'Nouveaux Arrivants',
+                data: [{% for arrival in arrivals_per_day %}{{ arrival.count }},{% endfor %}],
+            }]
+        };
+
         // Create custom gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, '#0ea5e9'); // Brand Primary
         gradient.addColorStop(1, '#E0F2FE'); // Brand Light
 
-        new Chart(ctx, {
+        const chart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: [{% for dep in departements %}'{{ dep.nom }}',{% endfor %}],
-                datasets: [{
-                    label: 'Effectif',
-                    data: [{% for dep in departements %}{{ dep.num_employees }},{% endfor %}],
-                    backgroundColor: gradient,
-                    hoverBackgroundColor: '#0369A1',
-                    borderRadius: 12,
-                    borderSkipped: false,
-                    barThickness: 32,
-                }]
-            },
+            data: moisData,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -241,6 +251,38 @@
                     }
                 }
             }
+        });
+
+        // Apply styles to datasets
+        function applyStyles(dataset) {
+            dataset.backgroundColor = gradient;
+            dataset.hoverBackgroundColor = '#0369A1';
+            dataset.borderRadius = 12;
+            dataset.borderSkipped = false;
+            dataset.barThickness = 32;
+        }
+
+        applyStyles(chart.data.datasets[0]);
+        chart.update();
+
+        btnSemaine.addEventListener('click', () => {
+            chart.data = semaineData;
+            applyStyles(chart.data.datasets[0]);
+            chart.update();
+            
+            // UI Update
+            btnSemaine.className = 'px-4 py-2 bg-brand text-white rounded-lg text-xs font-bold shadow-lg shadow-brand/20';
+            btnMois.className = 'px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 hover:bg-brand-light hover:text-brand transition-all';
+        });
+
+        btnMois.addEventListener('click', () => {
+            chart.data = moisData;
+            applyStyles(chart.data.datasets[0]);
+            chart.update();
+            
+            // UI Update
+            btnMois.className = 'px-4 py-2 bg-brand text-white rounded-lg text-xs font-bold shadow-lg shadow-brand/20';
+            btnSemaine.className = 'px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 hover:bg-brand-light hover:text-brand transition-all';
         });
     });
 </script>
