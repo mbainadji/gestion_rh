@@ -7,6 +7,7 @@ from .models import (
 
 class EmployeForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), required=False, label="Mot de passe (laisser vide pour ne pas changer)")
+    leads_departement = forms.ModelChoiceField(queryset=Departement.objects.all(), required=False, label="Dirige le département (pour les Chefs de Service)")
 
     class Meta:
         model = Employe
@@ -15,6 +16,14 @@ class EmployeForm(forms.ModelForm):
             'date_naissance': forms.DateInput(attrs={'type': 'date'}),
             'date_embauche': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            try:
+                self.fields['leads_departement'].initial = self.instance.departement_dirige
+            except:
+                pass
 
     def save(self, commit=True):
         from django.contrib.auth.models import User
@@ -44,12 +53,26 @@ class EmployeForm(forms.ModelForm):
         
         if commit:
             instance.save()
+            # Gérer le département dirigé
+            leads_dept = self.cleaned_data.get('leads_departement')
+            if instance.role == 'MANAGER' and leads_dept:
+                # Si cet employé doit diriger un département
+                leads_dept.chef_de_service = instance
+                leads_dept.save()
+            elif instance.role != 'MANAGER':
+                # Si l'employé n'est plus manager, il ne doit plus diriger de département
+                Departement.objects.filter(chef_de_service=instance).update(chef_de_service=None)
+                
         return instance
 
 class DepartementForm(forms.ModelForm):
     class Meta:
         model = Departement
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['chef_de_service'].queryset = Employe.objects.filter(role='MANAGER')
 
 class PosteForm(forms.ModelForm):
     class Meta:

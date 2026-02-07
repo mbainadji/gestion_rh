@@ -36,6 +36,15 @@
                 <div class="pt-16 pb-8 px-8 text-center">
                     <h2 class="text-2xl font-display font-bold text-slate-800">{{ employee.prenom }} {{ employee.nom }}</h2>
                     <p class="text-brand font-bold text-sm uppercase tracking-widest mt-1">{{ employee.poste.titre }}</p>
+                    
+                    {% if employee.departement_dirige %}
+                    <div class="mt-2">
+                        <span class="px-3 py-1 bg-brand-light text-brand rounded-full text-[10px] font-black uppercase border border-brand/10">
+                            <i class="fas fa-star mr-1"></i> Chef de Service : {{ employee.departement_dirige.nom }}
+                        </span>
+                    </div>
+                    {% endif %}
+
                     <div class="mt-4 flex justify-center">
                         <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-bold border border-slate-200">
                             #{{ employee.matricule }}

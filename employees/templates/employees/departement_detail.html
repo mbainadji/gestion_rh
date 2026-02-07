@@ -21,6 +21,20 @@
                 <div class="text-center mt-4">
                     <h2 class="text-2xl font-bold text-slate-900">{{ departement.nom }}</h2>
                     <p class="text-brand font-medium">Code: {{ departement.code }}</p>
+                    
+                    <div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Chef de Service</p>
+                        <p class="text-slate-900 font-semibold">
+                            {% if departement.chef_de_service %}
+                                <a href="{% url 'employees:employee_detail' departement.chef_de_service.pk %}" class="text-brand hover:underline">
+                                    {{ departement.chef_de_service.prenom }} {{ departement.chef_de_service.nom }}
+                                </a>
+                            {% else %}
+                                <span class="text-slate-400 italic font-normal">Non assigné</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
                     <div class="flex items-center justify-center gap-2 mt-4">
                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
                             {{ departement.num_employees }} Employés

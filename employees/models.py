@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class Departement(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom du département")
     code = models.CharField(max_length=10, unique=True, verbose_name="Code")
+    chef_de_service = models.OneToOneField('Employe', on_delete=models.SET_NULL, null=True, blank=True, related_name='departement_dirige', verbose_name="Chef de service")
 
     def __str__(self):
         return self.nom
