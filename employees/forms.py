@@ -6,13 +6,45 @@ from .models import (
 )
 
 class EmployeForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(), required=False, label="Mot de passe (laisser vide pour ne pas changer)")
+
     class Meta:
         model = Employe
-        fields = '__all__'
+        exclude = ['user']
         widgets = {
             'date_naissance': forms.DateInput(attrs={'type': 'date'}),
             'date_embauche': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def save(self, commit=True):
+        from django.contrib.auth.models import User
+        instance = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        
+        if not instance.pk:  # Création
+            # Créer un utilisateur associé
+            username = instance.email.split('@')[0]
+            # S'assurer que le username est unique
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            user = User.objects.create_user(
+                username=username,
+                email=instance.email,
+                password=password if password else "password123" # Mot de passe par défaut
+            )
+            instance.user = user
+        elif password:  # Mise à jour avec nouveau mot de passe
+            if instance.user:
+                instance.user.set_password(password)
+                instance.user.save()
+        
+        if commit:
+            instance.save()
+        return instance
 
 class DepartementForm(forms.ModelForm):
     class Meta:

@@ -92,7 +92,7 @@
                     {% endif %}
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-accent-dark/70">Âge</span>
-                        <span class="text-sm font-black text-accent-dark">34 ans</span>
+                        <span class="text-sm font-black text-accent-dark">{{ employee.age|default:"-" }} ans</span>
                     </div>
                 </div>
             </div>

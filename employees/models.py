@@ -58,6 +58,19 @@ class Employe(models.Model):
     def is_only_employe(self):
         return self.role == 'EMPLOYE'
 
+    @property
+    def age(self):
+        if self.date_naissance:
+            import datetime
+            today = datetime.date.today()
+            return today.year - self.date_naissance.year - ((today.month, today.day) < (self.date_naissance.month, self.date_naissance.day))
+        return None
+
+    @property
+    def age_a_venir(self):
+        age = self.age
+        return age + 1 if age is not None else None
+
     class Meta:
         verbose_name = "Employé"
 

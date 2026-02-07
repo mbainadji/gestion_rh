@@ -47,6 +47,7 @@ def dashboard(request):
 
     # Logique commune pour les arrivées
     today = timezone.now().date()
+    total_formations = Formation.objects.count()
     last_7_days = [(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
     arrivals_per_day = []
     
@@ -65,6 +66,7 @@ def dashboard(request):
     context = {
         'total_employees': total_employees,
         'departements': departements,
+        'total_formations': total_formations,
         'recent_conges': recent_conges,
         'anniversaires': anniversaires if 'anniversaires' in locals() else [],
         'arrivals_per_day': arrivals_per_day,
@@ -162,9 +164,21 @@ def employee_delete(request, pk):
     return render(request, 'employees/confirm_delete.html', {'object': employee})
 
 @login_required
-@rh_required
 def document_create(request, employee_pk):
     employee = get_object_or_404(Employe, pk=employee_pk)
+    
+    # Vérification des permissions : RH, Manager du dept, ou l'employé lui-même
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh:
+            if profil.is_manager:
+                if employee.poste.departement != profil.poste.departement:
+                    raise PermissionDenied
+            else:
+                # Simple employé : ne peut uploader que pour lui-même
+                if employee != profil:
+                    raise PermissionDenied
+
     if request.method == 'POST':
         form = DocumentRHForm(request.POST, request.FILES)
         if form.is_valid():
