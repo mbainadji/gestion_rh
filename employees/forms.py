@@ -33,6 +33,18 @@ class CongeForm(forms.ModelForm):
             'date_fin': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user and hasattr(user, 'profil'):
+            profil = user.profil
+            if profil.role == 'MANAGER':
+                # Si c'est un manager, il ne peut choisir que des RH comme validateurs
+                self.fields['validateur'].queryset = Employe.objects.filter(role='RH')
+            elif profil.role == 'EMPLOYE':
+                # Si c'est un employé, il peut choisir des Managers ou RH
+                self.fields['validateur'].queryset = Employe.objects.filter(role__in=['MANAGER', 'RH'])
+
 class AbsenceForm(forms.ModelForm):
     class Meta:
         model = Absence

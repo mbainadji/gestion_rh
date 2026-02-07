@@ -37,6 +37,7 @@ urlpatterns = [
     # Présences
     path('presences/', views.presence_list, name='presence_list'),
     path('presences/add/', views.presence_create, name='presence_create'),
+    path('presences/check/', views.presence_check, name='presence_check'),
     
     # Paie
     path('paie/', views.paie_list, name='paie_list'),
@@ -48,6 +49,7 @@ urlpatterns = [
     path('formations/<int:pk>/', views.formation_detail, name='formation_detail'),
     path('formations/<int:pk>/edit/', views.formation_update, name='formation_update'),
     path('formations/<int:pk>/delete/', views.formation_delete, name='formation_delete'),
+    path('formations/<int:pk>/register/', views.formation_register, name='formation_register'),
     
     # Recrutement
     path('recrutements/', views.recrutement_list, name='recrutement_list'),

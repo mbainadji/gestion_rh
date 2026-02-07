@@ -22,9 +22,11 @@
             </div>
         </div>
         
+        {% if user.profil.is_rh %}
         <a href="{% url 'employees:employee_create' %}" class="w-full md:w-auto px-6 py-4 bg-accent text-white font-bold rounded-2xl hover:bg-accent-dark transition-all flex items-center justify-center gap-3 shadow-lg shadow-accent/20">
             <i class="fas fa-plus"></i> Nouveau collaborateur
         </a>
+        {% endif %}
     </div>
 
     <!-- Filters & Search Card -->
@@ -90,12 +92,14 @@
                                 <a href="{% url 'employees:employee_detail' employee.pk %}" class="w-10 h-10 flex items-center justify-center text-brand bg-brand-light/50 hover:bg-brand hover:text-white rounded-xl transition-all" title="Voir profil">
                                     <i class="far fa-eye"></i>
                                 </a>
+                                {% if user.is_superuser or user.profil.is_rh %}
                                 <a href="{% url 'employees:employee_update' employee.pk %}" class="w-10 h-10 flex items-center justify-center text-accent bg-accent-light/50 hover:bg-accent hover:text-white rounded-xl transition-all" title="Modifier">
                                     <i class="far fa-edit"></i>
                                 </a>
                                 <a href="{% url 'employees:employee_delete' employee.pk %}" class="w-10 h-10 flex items-center justify-center text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white rounded-xl transition-all" title="Supprimer">
                                     <i class="far fa-trash-can"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

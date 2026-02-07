@@ -24,7 +24,14 @@ class Poste(models.Model):
         verbose_name = "Poste"
 
 class Employe(models.Model):
+    ROLES = [
+        ('ADMIN', 'Super Admin'),
+        ('RH', 'Responsable RH'),
+        ('MANAGER', 'Chef Service'),
+        ('EMPLOYE', 'Employé'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='profil', verbose_name="Utilisateur")
+    role = models.CharField(max_length=20, choices=ROLES, default='EMPLOYE', verbose_name="Rôle")
     matricule = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name="Matricule")
     nom = models.CharField(max_length=100, verbose_name="Nom")
     prenom = models.CharField(max_length=100, verbose_name="Prénom")
@@ -38,6 +45,18 @@ class Employe(models.Model):
 
     def __str__(self):
         return f"{self.prenom} {self.nom} ({self.matricule})"
+
+    @property
+    def is_rh(self):
+        return self.role == 'RH' or self.user.is_superuser or self.role == 'ADMIN'
+
+    @property
+    def is_manager(self):
+        return self.role == 'MANAGER' or self.is_rh
+
+    @property
+    def is_only_employe(self):
+        return self.role == 'EMPLOYE'
 
     class Meta:
         verbose_name = "Employé"

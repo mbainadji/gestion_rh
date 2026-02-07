@@ -60,16 +60,30 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex gap-2">
-                <a href="{% url 'employees:formation_detail' f.pk %}" class="flex-1 py-3 text-center bg-slate-50 hover:bg-brand-light hover:text-brand text-slate-500 rounded-xl text-xs font-bold transition-all border border-slate-100 hover:border-brand-light">
-                    Détails de la session
-                </a>
-                <a href="{% url 'employees:formation_update' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-xl transition-all border border-slate-100 hover:border-accent-light" title="Modifier">
-                    <i class="far fa-edit"></i>
-                </a>
-                <a href="{% url 'employees:formation_delete' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all border border-slate-100 hover:border-rose-100" title="Supprimer">
-                    <i class="far fa-trash-can"></i>
-                </a>
+            <div class="mt-8 flex flex-col gap-3">
+                {% if user.profil.role == 'EMPLOYE' %}
+                    {% if f.id in user_registrations %}
+                    <button disabled class="w-full py-4 bg-slate-100 text-slate-400 font-bold rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed">
+                        <i class="fas fa-check-circle"></i> Déjà inscrit
+                    </button>
+                    {% else %}
+                    <a href="{% url 'employees:formation_register' f.pk %}" class="w-full py-4 bg-brand text-white font-bold rounded-2xl hover:bg-brand-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/20">
+                        <i class="fas fa-user-plus"></i> S'inscrire à la session
+                    </a>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="flex gap-2">
+                    <a href="{% url 'employees:formation_detail' f.pk %}" class="flex-1 py-3 text-center bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-bold transition-all border border-slate-100">
+                        Détails
+                    </a>
+                    <a href="{% url 'employees:formation_update' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-xl transition-all border border-slate-100" title="Modifier">
+                        <i class="far fa-edit"></i>
+                    </a>
+                    <a href="{% url 'employees:formation_delete' f.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all border border-slate-100" title="Supprimer">
+                        <i class="far fa-trash-can"></i>
+                    </a>
+                </div>
             </div>
         </div>
         {% empty %}
