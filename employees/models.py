@@ -48,12 +48,24 @@ class Employe(models.Model):
         return f"{self.prenom} {self.nom} ({self.matricule})"
 
     @property
+    def is_superadmin(self):
+        return self.role == 'ADMIN' or self.user.is_superuser
+
+    @property
     def is_rh(self):
-        return self.role == 'RH' or self.user.is_superuser or self.role == 'ADMIN'
+        return self.role == 'RH'
 
     @property
     def is_manager(self):
-        return self.role == 'MANAGER' or self.is_rh
+        return self.role == 'MANAGER'
+
+    @property
+    def is_dept_admin(self):
+        return self.is_manager
+
+    @property
+    def is_any_admin(self):
+        return self.is_superadmin or self.is_dept_admin or self.is_rh
 
     @property
     def is_only_employe(self):
@@ -182,6 +194,7 @@ class Objectif(models.Model):
 class Formation(models.Model):
     titre = models.CharField(max_length=200, verbose_name="Titre de la formation")
     description = models.TextField(verbose_name="Description")
+    departement = models.ForeignKey(Departement, on_delete=models.SET_NULL, null=True, blank=True, related_name='formations', verbose_name="Département")
     date_debut = models.DateField(verbose_name="Date de début")
     date_fin = models.DateField(verbose_name="Date de fin")
     budget = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Budget")

@@ -18,7 +18,27 @@ class EmployeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        if not self.instance.pk:
+            self.fields['password'].label = "Mot de passe"
+            self.fields['password'].help_text = "Laisser vide pour utiliser le mot de passe par défaut (departement123 pour les chefs, password123 pour les employés)"
+        
+        # Filtre pour les managers (Chefs de Département)
+        if self.user and not self.user.is_superuser:
+            if hasattr(self.user, 'profil'):
+                profil = self.user.profil
+                if not profil.is_rh and profil.is_manager:
+                    # Restreindre les postes au département du manager
+                    if profil.poste:
+                        self.fields['poste'].queryset = Poste.objects.filter(departement=profil.poste.departement)
+                        self.fields['leads_departement'].queryset = Departement.objects.filter(id=profil.poste.departement.id)
+                    
+                    # Un manager ne peut créer que des simples employés par défaut
+                    self.fields['role'].choices = [('EMPLOYE', 'Employé')]
+                    self.fields['role'].initial = 'EMPLOYE'
+
         if self.instance and self.instance.pk:
             try:
                 self.fields['leads_departement'].initial = self.instance.departement_dirige
@@ -40,15 +60,22 @@ class EmployeForm(forms.ModelForm):
                 username = f"{base_username}{counter}"
                 counter += 1
             
+            default_password = "password123"
+            if instance.role == 'MANAGER':
+                default_password = "departement123"
+                
             user = User.objects.create_user(
                 username=username,
                 email=instance.email,
-                password=password if password else "password123" # Mot de passe par défaut
+                password=password if password else default_password
             )
             instance.user = user
-        elif password:  # Mise à jour avec nouveau mot de passe
+        elif password or 'email' in self.changed_data:  # Mise à jour
             if instance.user:
-                instance.user.set_password(password)
+                if password:
+                    instance.user.set_password(password)
+                if 'email' in self.changed_data:
+                    instance.user.email = instance.email
                 instance.user.save()
         
         if commit:

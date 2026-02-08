@@ -14,47 +14,79 @@ from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .decorators import rh_required, manager_required
+from .decorators import rh_required, manager_required, superadmin_required, dept_admin_required
 
 @login_required
 def dashboard(request):
     if not hasattr(request.user, 'profil'):
-        # Cas du superuser sans profil
+        # Cas du superuser sans profil (considéré comme ADMIN global)
         total_employees = Employe.objects.count()
         departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
-        recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
+        recent_conges = [] # Super admin ne gère pas les congés
         today = timezone.now().date()
         anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
     else:
         profil = request.user.profil
-        if profil.is_rh:
+        if profil.is_superadmin:
+            total_employees = Employe.objects.count()
+            departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
+            recent_conges = [] # Super admin ne gère pas les congés
+            today = timezone.now().date()
+            anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
+        elif profil.is_rh:
+            # RH gère congés, paie etc mais n'a pas forcément accès global à la structure employe selon les nouveaux critères ?
+            # On va dire que RH gère les aspects opérationnels
             total_employees = Employe.objects.count()
             departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
             recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
             today = timezone.now().date()
             anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
-        elif profil.is_manager:
-            # Manager voit son département
-            dept = profil.poste.departement
-            total_employees = Employe.objects.filter(poste__departement=dept).count()
-            departements = Departement.objects.filter(id=dept.id).annotate(num_employees=Count('postes__employes'))
-            recent_conges = Conge.objects.filter(employe__poste__departement=dept, statut='EN_ATTENTE').order_by('-date_debut')[:5]
-            today = timezone.now().date()
-            anniversaires = Employe.objects.filter(poste__departement=dept, date_naissance__month=today.month).order_by('date_naissance__day')
-        else:
-            # Employé voit son espace personnel (redirection ou vue simplifiée)
-            return redirect('employees:employee_detail', pk=profil.pk)
+        elif profil.is_dept_admin or profil.role == 'EMPLOYE':
+            # Manager ou Employé voit son département
+            if profil.poste:
+                dept = profil.poste.departement
+                total_employees = Employe.objects.filter(poste__departement=dept).count()
+                departements = Departement.objects.filter(id=dept.id).annotate(num_employees=Count('postes__employes'))
+                
+                if profil.is_dept_admin:
+                    recent_conges = Conge.objects.filter(employe__poste__departement=dept, statut='EN_ATTENTE').order_by('-date_debut')[:5]
+                else:
+                    recent_conges = Conge.objects.filter(employe=profil).order_by('-date_debut')[:5]
+                
+                today = timezone.now().date()
+                anniversaires = Employe.objects.filter(poste__departement=dept, date_naissance__month=today.month).order_by('date_naissance__day')
+            else:
+                total_employees = 0
+                departements = Departement.objects.none()
+                recent_conges = []
+                anniversaires = []
 
     # Logique commune pour les arrivées
     today = timezone.now().date()
-    total_formations = Formation.objects.count()
+    
+    # Filtrer les formations et les arrivées selon le rôle
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh:
+            if profil.poste:
+                total_formations = Formation.objects.filter(Q(departement=profil.poste.departement) | Q(departement__isnull=True)).count()
+            else:
+                total_formations = Formation.objects.filter(departement__isnull=True).count()
+        else:
+            total_formations = Formation.objects.count()
+    else:
+        total_formations = Formation.objects.count()
+
     last_7_days = [(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
     arrivals_per_day = []
     
     # Filtrer les arrivées si manager
     base_employees = Employe.objects.all()
     if hasattr(request.user, 'profil') and request.user.profil.is_manager and not request.user.profil.is_rh:
-        base_employees = base_employees.filter(poste__departement=request.user.profil.poste.departement)
+        if request.user.profil.poste:
+            base_employees = base_employees.filter(poste__departement=request.user.profil.poste.departement)
+        else:
+            base_employees = base_employees.none()
 
     for day in last_7_days:
         count = base_employees.filter(date_embauche=day).count()
@@ -83,9 +115,18 @@ def employee_list(request):
     
     if not request.user.is_superuser:
         profil = request.user.profil
-        if not profil.is_rh:
+        if profil.is_dept_admin:
             # Chef de service : restreint à son département
-            employees = employees.filter(poste__departement=profil.poste.departement)
+            if profil.poste:
+                employees = employees.filter(poste__departement=profil.poste.departement)
+            else:
+                employees = employees.none()
+        elif not profil.is_superadmin and not profil.is_rh:
+            # Simple employé ne voit que les talents de son département (nouveau critère)
+            if profil.poste:
+                employees = employees.filter(poste__departement=profil.poste.departement)
+            else:
+                employees = employees.none()
 
     if query:
         employees = employees.filter(
@@ -103,14 +144,23 @@ def employee_detail(request, pk):
     
     if not request.user.is_superuser:
         profil = request.user.profil
-        # Restriction : Employé ne voit que lui-même, Manager voit son dept, RH voit tout
-        if not profil.is_rh:
-            if profil.is_manager:
+        # Restriction : 
+        # SuperAdmin voit tout
+        # DeptAdmin voit son département
+        # Employé ne voit que lui-même
+        if not profil.is_superadmin and not profil.is_rh:
+            if profil.is_dept_admin:
                 if employee.poste.departement != profil.poste.departement:
+                    from django.core.exceptions import PermissionDenied
                     raise PermissionDenied
             else:
                 if employee != profil:
-                    raise PermissionDenied
+                    # Un employé peut voir les talents de son département ? 
+                    # Le user dit "Peut voir uniquement son propre département et ses propres informations"
+                    # On va autoriser la vue détail si c'est le même département pour "voir les talents"
+                    if employee.poste.departement != profil.poste.departement:
+                        from django.core.exceptions import PermissionDenied
+                        raise PermissionDenied
 
     documents = DocumentRH.objects.filter(employe=employee)
     evaluations = Evaluation.objects.filter(employe=employee)
@@ -127,36 +177,70 @@ def employee_detail(request, pk):
     })
 
 @login_required
-@rh_required
+@manager_required
 def employee_create(request):
+    # Tout manager (SuperAdmin ou DeptAdmin) peut créer
+    initial_data = {}
+    role_param = request.GET.get('role')
+    dept_id = request.GET.get('dept_id')
+    
+    if role_param:
+        initial_data['role'] = role_param
+    if dept_id:
+        initial_data['leads_departement'] = dept_id
+        # Si on passe un dept_id, on suppose que c'est pour un manager de ce dept
+        try:
+            dept = Departement.objects.get(id=dept_id)
+            # On peut aussi pré-remplir le poste si nécessaire
+        except Departement.DoesNotExist:
+            pass
+
     if request.method == 'POST':
-        form = EmployeForm(request.POST)
+        form = EmployeForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Employé ajouté avec succès.")
             return redirect('employees:employee_list')
     else:
-        form = EmployeForm()
+        form = EmployeForm(user=request.user, initial=initial_data)
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Ajouter un employé"})
 
 @login_required
-@rh_required
+@dept_admin_required
 def employee_update(request, pk):
     employee = get_object_or_404(Employe, pk=pk)
+    
+    # Vérification des permissions pour les Dept Admins
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_superadmin:
+            if employee.poste.departement != profil.poste.departement:
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+                
     if request.method == 'POST':
-        form = EmployeForm(request.POST, instance=employee)
+        form = EmployeForm(request.POST, instance=employee, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Informations de l'employé mises à jour.")
             return redirect('employees:employee_detail', pk=pk)
     else:
-        form = EmployeForm(instance=employee)
+        form = EmployeForm(instance=employee, user=request.user)
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier l'employé"})
 
 @login_required
-@rh_required
+@dept_admin_required
 def employee_delete(request, pk):
     employee = get_object_or_404(Employe, pk=pk)
+    
+    # Vérification des permissions pour les managers
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_superadmin:
+            if employee.poste.departement != profil.poste.departement:
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+                
     if request.method == 'POST':
         employee.delete()
         messages.success(request, "Employé supprimé.")
@@ -193,15 +277,47 @@ def document_create(request, employee_pk):
 
 # Gestion des Départements
 @login_required
-@rh_required
 def departement_list(request):
     departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
+    
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            # Employé et Manager de département : ne voient que leur département
+            if hasattr(profil, 'leads_departement') and profil.leads_departement:
+                departements = departements.filter(id=profil.leads_departement.id)
+            elif profil.poste:
+                departements = departements.filter(id=profil.poste.departement.id)
+            else:
+                departements = departements.none()
+
     return render(request, 'employees/departement_list.html', {'departements': departements})
 
 @login_required
-@rh_required
 def departement_detail(request, pk):
     departement = get_object_or_404(Departement.objects.annotate(num_employees=Count('postes__employes')), pk=pk)
+    
+    # Restriction
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if hasattr(profil, 'leads_departement') and profil.leads_departement and departement != profil.leads_departement:
+                # Si c'est un manager, il doit être le manager de CE département
+                # Mais attendez, un employé peut voir les détails de son propre département aussi ?
+                # "verra l'effectif selon son departement tout les informations concernat son departement"
+                # Donc on autorise si c'est son département.
+                pass 
+            
+            # Vérification finale : est-ce son département ?
+            user_dept = None
+            if profil.poste:
+                user_dept = profil.poste.departement
+            elif hasattr(profil, 'leads_departement') and profil.leads_departement:
+                user_dept = profil.leads_departement
+                
+            if departement != user_dept:
+                raise PermissionDenied
+
     postes = departement.postes.annotate(num_employees=Count('employes'))
     return render(request, 'employees/departement_detail.html', {
         'departement': departement,
@@ -209,7 +325,7 @@ def departement_detail(request, pk):
     })
 
 @login_required
-@rh_required
+@superadmin_required
 def departement_create(request):
     if request.method == 'POST':
         form = DepartementForm(request.POST)
@@ -222,9 +338,19 @@ def departement_create(request):
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Créer un département"})
 
 @login_required
-@rh_required
+@manager_required
 def departement_update(request, pk):
     departement = get_object_or_404(Departement, pk=pk)
+    
+    # Restriction
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if profil.leads_departement and departement != profil.leads_departement:
+                raise PermissionDenied
+            elif profil.poste and departement != profil.poste.departement:
+                raise PermissionDenied
+
     if request.method == 'POST':
         form = DepartementForm(request.POST, instance=departement)
         if form.is_valid():
@@ -236,14 +362,14 @@ def departement_update(request, pk):
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier le département"})
 
 @login_required
-@rh_required
+@superadmin_required
 def departement_delete(request, pk):
     departement = get_object_or_404(Departement, pk=pk)
     if request.method == 'POST':
         departement.delete()
         messages.success(request, "Département supprimé.")
         return redirect('employees:departement_list')
-    return render(request, 'confirm_delete.html', {'object': departement})
+    return render(request, 'employees/confirm_delete.html', {'object': departement})
 
 # Gestion des Postes
 @login_required
@@ -294,21 +420,25 @@ def poste_delete(request, pk):
         poste.delete()
         messages.success(request, "Poste supprimé.")
         return redirect('employees:poste_list')
-    return render(request, 'confirm_delete.html', {'object': poste})
+    return render(request, 'employees/confirm_delete.html', {'object': poste})
 
 # Gestion des Congés
 @login_required
 def conge_list(request):
-    if request.user.is_superuser:
+    if not hasattr(request.user, 'profil'):
+        # Cas du superuser sans profil
+        return render(request, 'employees/conge_list.html', {'conges': []})
+        
+    profil = request.user.profil
+    if profil.is_superadmin:
+        # Super admin ne gère pas les congés
+        conges = []
+    elif profil.is_rh:
         conges = Conge.objects.all().select_related('employe')
+    elif profil.is_dept_admin:
+        conges = Conge.objects.filter(employe__poste__departement=profil.poste.departement).select_related('employe')
     else:
-        profil = request.user.profil
-        if profil.is_rh:
-            conges = Conge.objects.all().select_related('employe')
-        elif profil.is_manager:
-            conges = Conge.objects.filter(employe__poste__departement=profil.poste.departement).select_related('employe')
-        else:
-            conges = Conge.objects.filter(employe=profil).select_related('employe')
+        conges = Conge.objects.filter(employe=profil).select_related('employe')
         
     return render(request, 'employees/conge_list.html', {'conges': conges})
 
@@ -346,16 +476,19 @@ def conge_request(request):
 def conge_approve(request, pk):
     conge = get_object_or_404(Conge, pk=pk)
     
-    # Vérification : le manager doit appartenir au même département que l'employé
-    if not request.user.is_superuser:
-        profil = request.user.profil
-        if not profil.is_rh:
-            if conge.employe.poste.departement != profil.poste.departement:
-                raise PermissionDenied
-            # Un manager ne peut pas approuver la demande d'un autre manager
-            if conge.employe.role == 'MANAGER':
-                messages.error(request, "Seul un responsable RH peut approuver la demande d'un chef de service.")
-                return redirect('employees:conge_list')
+    if not hasattr(request.user, 'profil') or request.user.profil.is_superadmin:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    profil = request.user.profil
+    if not profil.is_rh:
+        if conge.employe.poste.departement != profil.poste.departement:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        # Un manager ne peut pas approuver la demande d'un autre manager
+        if conge.employe.role == 'MANAGER':
+            messages.error(request, "Seul un responsable RH peut approuver la demande d'un chef de service.")
+            return redirect('employees:conge_list')
 
     conge.statut = 'APPROUVE'
     conge.save()
@@ -372,15 +505,19 @@ def conge_approve(request, pk):
 def conge_reject(request, pk):
     conge = get_object_or_404(Conge, pk=pk)
     
-    if not request.user.is_superuser:
-        profil = request.user.profil
-        if not profil.is_rh:
-            if conge.employe.poste.departement != profil.poste.departement:
-                raise PermissionDenied
-            # Un manager ne peut pas rejeter la demande d'un autre manager
-            if conge.employe.role == 'MANAGER':
-                messages.error(request, "Seul un responsable RH peut rejeter la demande d'un chef de service.")
-                return redirect('employees:conge_list')
+    if not hasattr(request.user, 'profil') or request.user.profil.is_superadmin:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    profil = request.user.profil
+    if not profil.is_rh:
+        if conge.employe.poste.departement != profil.poste.departement:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        # Un manager ne peut pas rejeter la demande d'un autre manager
+        if conge.employe.role == 'MANAGER':
+            messages.error(request, "Seul un responsable RH peut rejeter la demande d'un chef de service.")
+            return redirect('employees:conge_list')
 
     conge.statut = 'REJETE'
     conge.save()
@@ -493,12 +630,18 @@ def presence_check(request):
 @login_required
 @rh_required
 def paie_list(request):
+    if hasattr(request.user, 'profil') and request.user.profil.is_superadmin:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
     fiches = FichePaie.objects.all().select_related('employe').order_by('-annee', '-mois')
     return render(request, 'employees/paie_list.html', {'fiches': fiches})
 
 @login_required
 @rh_required
 def paie_create(request):
+    if hasattr(request.user, 'profil') and request.user.profil.is_superadmin:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
     if request.method == 'POST':
         form = FichePaieForm(request.POST)
         if form.is_valid():
@@ -513,9 +656,18 @@ def paie_create(request):
 def formation_list(request):
     formations = Formation.objects.all()
     user_registrations = []
-    if not request.user.is_superuser and hasattr(request.user, 'profil'):
+    
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh:
+            # Employé et DeptAdmin ne voient que les formations de leur département ou générales
+            if profil.poste:
+                formations = formations.filter(Q(departement=profil.poste.departement) | Q(departement__isnull=True))
+            else:
+                formations = formations.filter(departement__isnull=True)
+                
         user_registrations = InscriptionFormation.objects.filter(
-            employe=request.user.profil
+            employe=profil
         ).values_list('formation_id', flat=True)
     
     return render(request, 'employees/formation_list.html', {
@@ -524,21 +676,41 @@ def formation_list(request):
     })
 
 @login_required
-@rh_required
+@manager_required
 def formation_create(request):
     if request.method == 'POST':
         form = FormationForm(request.POST)
         if form.is_valid():
-            form.save()
+            formation = form.save(commit=False)
+            # Isolation par département pour les managers
+            if not request.user.is_superuser:
+                profil = request.user.profil
+                if not profil.is_rh and not profil.is_superadmin:
+                    if profil.poste:
+                        formation.departement = profil.poste.departement
+            formation.save()
             messages.success(request, "Formation créée avec succès.")
             return redirect('employees:formation_list')
     else:
         form = FormationForm()
+        if not request.user.is_superuser:
+            profil = request.user.profil
+            if not profil.is_rh and not profil.is_superadmin and profil.poste:
+                form.initial['departement'] = profil.poste.departement
+
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Créer une formation"})
 
 @login_required
 def formation_detail(request, pk):
     formation = get_object_or_404(Formation, pk=pk)
+    
+    # Restriction par département
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if formation.departement and (not profil.poste or formation.departement != profil.poste.departement):
+                raise PermissionDenied
+
     inscriptions = InscriptionFormation.objects.filter(formation=formation).select_related('employe')
     
     is_registered = False
@@ -552,9 +724,17 @@ def formation_detail(request, pk):
     })
 
 @login_required
-@rh_required
+@manager_required
 def formation_update(request, pk):
     formation = get_object_or_404(Formation, pk=pk)
+    
+    # Restriction pour les managers
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if formation.departement and (not profil.poste or formation.departement != profil.poste.departement):
+                raise PermissionDenied
+
     if request.method == 'POST':
         form = FormationForm(request.POST, instance=formation)
         if form.is_valid():
@@ -566,8 +746,16 @@ def formation_update(request, pk):
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier la formation"})
 
 @login_required
+@manager_required
 def formation_delete(request, pk):
     formation = get_object_or_404(Formation, pk=pk)
+    
+    # Restriction pour les managers
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if formation.departement and (not profil.poste or formation.departement != profil.poste.departement):
+                raise PermissionDenied
     if request.method == 'POST':
         formation.delete()
         messages.success(request, "Formation supprimée.")
@@ -600,29 +788,71 @@ def formation_register(request, pk):
 @login_required
 def recrutement_list(request):
     offres = OffreEmploi.objects.all().annotate(num_candidatures=Count('candidatures'))
+    
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_superadmin and not profil.is_rh:
+            # Employé et DeptAdmin ne voient que leur département
+            offres = offres.filter(departement=profil.poste.departement)
+            
     return render(request, 'employees/recrutement_list.html', {'offres': offres})
 
 @login_required
+@manager_required
 def recrutement_create(request):
     if request.method == 'POST':
         form = OffreEmploiForm(request.POST)
         if form.is_valid():
-            form.save()
+            offre = form.save(commit=False)
+            if not request.user.is_superuser:
+                profil = request.user.profil
+                if not profil.is_rh and not profil.is_superadmin:
+                    if profil.poste:
+                        offre.departement = profil.poste.departement
+            offre.save()
             messages.success(request, "Offre d'emploi publiée.")
             return redirect('employees:recrutement_list')
     else:
         form = OffreEmploiForm()
+        if not request.user.is_superuser:
+            profil = request.user.profil
+            if not profil.is_rh and not profil.is_superadmin and profil.poste:
+                form.initial['departement'] = profil.poste.departement
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Publier une offre"})
 
 @login_required
 def recrutement_detail(request, pk):
     offre = get_object_or_404(OffreEmploi.objects.annotate(num_candidatures=Count('candidatures')), pk=pk)
+    
+    # Permission de voir
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_superadmin and not profil.is_rh:
+            if offre.departement != profil.poste.departement:
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+                
     candidatures = offre.candidatures.all()
+    # Seuls RH/SuperAdmin voient les candidatures détaillées
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_superadmin and not profil.is_rh:
+            candidatures = []
+            
     return render(request, 'employees/recrutement_detail.html', {'offre': offre, 'candidatures': candidatures})
 
 @login_required
+@manager_required
 def recrutement_update(request, pk):
     offre = get_object_or_404(OffreEmploi, pk=pk)
+    
+    # Restriction pour les managers
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if offre.departement and (not profil.poste or offre.departement != profil.poste.departement):
+                raise PermissionDenied
+
     if request.method == 'POST':
         form = OffreEmploiForm(request.POST, instance=offre)
         if form.is_valid():
@@ -634,8 +864,17 @@ def recrutement_update(request, pk):
     return render(request, 'employees/employee_form.html', {'form': form, 'title': "Modifier l'offre"})
 
 @login_required
+@manager_required
 def recrutement_delete(request, pk):
     offre = get_object_or_404(OffreEmploi, pk=pk)
+    
+    # Restriction pour les managers
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if offre.departement and (not profil.poste or offre.departement != profil.poste.departement):
+                raise PermissionDenied
+
     if request.method == 'POST':
         offre.delete()
         messages.success(request, "Offre d'emploi supprimée.")
@@ -662,11 +901,13 @@ def export_employees_csv(request):
 
 # Politiques RH
 @login_required
+@manager_required
 def politique_list(request):
     types_contrat = TypeContrat.objects.all()
     return render(request, 'employees/politique_list.html', {'types_contrat': types_contrat})
 
 @login_required
+@manager_required
 def politique_create(request):
     if request.method == 'POST':
         nom = request.POST.get('nom')

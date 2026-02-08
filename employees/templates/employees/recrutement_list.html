@@ -17,9 +17,11 @@
             </div>
         </div>
         
+        {% if user.is_superuser or user.profil.is_manager %}
         <a href="{% url 'employees:recrutement_create' %}" class="w-full md:w-auto px-6 py-4 bg-accent text-white font-bold rounded-2xl hover:bg-accent-dark transition-all flex items-center justify-center gap-3 shadow-lg shadow-accent/20">
             <i class="fas fa-paper-plane"></i> Publier une offre
         </a>
+        {% endif %}
     </div>
 
     <!-- Offers Grid -->
@@ -67,12 +69,14 @@
                     <a href="{% url 'employees:recrutement_detail' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-brand-light hover:text-brand rounded-2xl transition-all shadow-sm">
                         <i class="far fa-eye"></i>
                     </a>
+                    {% if user.is_superuser or user.profil.is_manager %}
                     <a href="{% url 'employees:recrutement_update' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-accent-light hover:text-accent rounded-2xl transition-all shadow-sm">
                         <i class="far fa-edit"></i>
                     </a>
                     <a href="{% url 'employees:recrutement_delete' offre.pk %}" class="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
                         <i class="far fa-trash-can"></i>
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

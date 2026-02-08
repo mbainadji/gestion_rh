@@ -14,7 +14,7 @@
             Ravi de vous revoir. Voici un aperçu de l'activité de votre organisation aujourd'hui. Tout semble en ordre !
         </p>
         <div class="flex flex-wrap gap-4">
-            {% if user.profil.is_rh or user.is_superuser %}
+            {% if user.profil.is_manager or user.is_superuser %}
             <a href="{% url 'employees:employee_create' %}" class="px-6 py-3 bg-white text-brand-dark font-bold rounded-xl hover:bg-accent-light hover:text-accent-dark transition-all flex items-center gap-2">
                 <i class="fas fa-plus"></i> Ajouter un employé
             </a>

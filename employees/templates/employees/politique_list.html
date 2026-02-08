@@ -56,9 +56,11 @@
                     Les politiques relatives aux congés, primes, heures supplémentaires et au code de conduite sont centralisées dans le module d'administration pour garantir la conformité et la sécurité des données.
                 </p>
             </div>
+            {% if user.is_superuser %}
             <a href="/admin/" class="px-6 py-3 bg-white text-brand-dark rounded-xl font-bold hover:bg-brand-light transition-colors shadow-lg">
                 Gérer via Admin
             </a>
+            {% endif %}
         </div>
         <!-- Decorative background elements -->
         <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary-800/30 rounded-full blur-3xl"></div>
