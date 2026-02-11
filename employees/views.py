@@ -22,7 +22,8 @@ def dashboard(request):
         # Cas du superuser sans profil (considéré comme ADMIN global)
         total_employees = Employe.objects.count()
         departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
-        recent_conges = [] # Super admin ne gère pas les congés
+        recent_conges = [] 
+        total_pending_conges = 0
         today = timezone.now().date()
         anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
     else:
@@ -30,19 +31,18 @@ def dashboard(request):
         if profil.is_superadmin:
             total_employees = Employe.objects.count()
             departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
-            recent_conges = [] # Super admin ne gère pas les congés
+            recent_conges = [] 
+            total_pending_conges = 0
             today = timezone.now().date()
             anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
         elif profil.is_rh:
-            # RH gère congés, paie etc mais n'a pas forcément accès global à la structure employe selon les nouveaux critères ?
-            # On va dire que RH gère les aspects opérationnels
             total_employees = Employe.objects.count()
             departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
             recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
+            total_pending_conges = Conge.objects.filter(statut='EN_ATTENTE').count()
             today = timezone.now().date()
             anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
         elif profil.is_dept_admin or profil.role == 'EMPLOYE':
-            # Manager ou Employé voit son département
             if profil.poste:
                 dept = profil.poste.departement
                 total_employees = Employe.objects.filter(poste__departement=dept).count()
@@ -50,8 +50,10 @@ def dashboard(request):
                 
                 if profil.is_dept_admin:
                     recent_conges = Conge.objects.filter(employe__poste__departement=dept, statut='EN_ATTENTE').order_by('-date_debut')[:5]
+                    total_pending_conges = Conge.objects.filter(employe__poste__departement=dept, statut='EN_ATTENTE').count()
                 else:
                     recent_conges = Conge.objects.filter(employe=profil).order_by('-date_debut')[:5]
+                    total_pending_conges = Conge.objects.filter(employe=profil, statut='EN_ATTENTE').count()
                 
                 today = timezone.now().date()
                 anniversaires = Employe.objects.filter(poste__departement=dept, date_naissance__month=today.month).order_by('date_naissance__day')
@@ -59,6 +61,7 @@ def dashboard(request):
                 total_employees = 0
                 departements = Departement.objects.none()
                 recent_conges = []
+                total_pending_conges = 0
                 anniversaires = []
 
     # Logique commune pour les arrivées
@@ -100,6 +103,7 @@ def dashboard(request):
         'departements': departements,
         'total_formations': total_formations,
         'recent_conges': recent_conges,
+        'total_pending_conges': total_pending_conges,
         'anniversaires': anniversaires if 'anniversaires' in locals() else [],
         'arrivals_per_day': arrivals_per_day,
     }

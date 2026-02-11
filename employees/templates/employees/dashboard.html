@@ -68,7 +68,7 @@
         </div>
         <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Congés en attente</p>
-            <h3 class="text-3xl font-display font-bold text-slate-800">{{ recent_conges.count }}</h3>
+            <h3 class="text-3xl font-display font-bold text-slate-800">{{ total_pending_conges }}</h3>
         </div>
     </div>
 </div>
@@ -158,8 +158,10 @@
         <!-- Pending Leaves List -->
         <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                <h2 class="text-lg font-display font-bold text-slate-800">Congés à valider</h2>
-                <span class="px-2 py-1 text-[10px] font-black bg-rose-50 text-rose-500 rounded-lg">{{ recent_conges.count }}</span>
+                <h2 class="text-lg font-display font-bold text-slate-800">
+                    {% if user.profil.is_manager or user.profil.is_rh or user.is_superuser %}Congés à valider{% else %}Mes demandes récentes{% endif %}
+                </h2>
+                <span class="px-2 py-1 text-[10px] font-black bg-rose-50 text-rose-500 rounded-lg">{{ total_pending_conges }}</span>
             </div>
             <div class="p-4 space-y-4">
                 {% for conge in recent_conges %}
@@ -172,7 +174,13 @@
                         <p class="text-[10px] text-slate-500">{{ conge.date_debut|date:"d M" }} - {{ conge.date_fin|date:"d M Y" }}</p>
                     </div>
                     <div class="text-right">
+                        {% if conge.statut == 'EN_ATTENTE' %}
                         <span class="px-2 py-1 text-[9px] font-black uppercase rounded-lg bg-accent-light text-accent-dark">Attente</span>
+                        {% elif conge.statut == 'APPROUVE' %}
+                        <span class="px-2 py-1 text-[9px] font-black uppercase rounded-lg bg-emerald-100 text-emerald-700">Approuvé</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-[9px] font-black uppercase rounded-lg bg-rose-100 text-rose-700">Rejeté</span>
+                        {% endif %}
                     </div>
                 </div>
                 {% empty %}
