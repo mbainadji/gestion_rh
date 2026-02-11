@@ -7,10 +7,12 @@ from .models import (
 from .forms import (
     EmployeForm, DepartementForm, PosteForm, CongeForm, AbsenceForm,
     PresenceForm, FichePaieForm, EvaluationForm, FormationForm,
-    OffreEmploiForm, CandidatureForm, DocumentRHForm
+    OffreEmploiForm, CandidatureForm, DocumentRHForm,
+    InscriptionFormationUpdateForm
 )
 from django.utils import timezone
 from django.db.models import Count, Q
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
@@ -111,7 +113,6 @@ def dashboard(request):
 
 # Gestion des Employés
 @login_required
-@manager_required
 def employee_list(request):
     query = request.GET.get('q')
     
@@ -718,13 +719,16 @@ def formation_detail(request, pk):
     inscriptions = InscriptionFormation.objects.filter(formation=formation).select_related('employe')
     
     is_registered = False
+    user_inscription = None
     if not request.user.is_superuser and hasattr(request.user, 'profil'):
-        is_registered = inscriptions.filter(employe=request.user.profil).exists()
+        user_inscription = inscriptions.filter(employe=request.user.profil).first()
+        is_registered = user_inscription is not None
         
     return render(request, 'employees/formation_detail.html', {
         'formation': formation, 
         'inscriptions': inscriptions,
-        'is_registered': is_registered
+        'is_registered': is_registered,
+        'user_inscription': user_inscription
     })
 
 @login_required
@@ -787,6 +791,32 @@ def formation_register(request, pk):
     if referer:
         return redirect(referer)
     return redirect('employees:formation_list')
+
+@login_required
+@manager_required
+def formation_inscription_update(request, pk, inscription_pk):
+    inscription = get_object_or_404(
+        InscriptionFormation.objects.select_related('formation'),
+        pk=inscription_pk,
+        formation_id=pk
+    )
+
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh and not profil.is_superadmin:
+            if inscription.formation.departement and (not profil.poste or inscription.formation.departement != profil.poste.departement):
+                raise PermissionDenied
+
+    if request.method != 'POST':
+        return redirect('employees:formation_detail', pk=pk)
+
+    form = InscriptionFormationUpdateForm(request.POST, request.FILES, instance=inscription)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Inscription mise à jour.")
+    else:
+        messages.error(request, "Impossible de mettre à jour l'inscription.")
+    return redirect('employees:formation_detail', pk=pk)
 
 # Recrutements
 @login_required

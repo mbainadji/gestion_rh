@@ -148,7 +148,15 @@ class PresenceForm(forms.ModelForm):
 class FichePaieForm(forms.ModelForm):
     class Meta:
         model = FichePaie
-        fields = '__all__'
+        fields = [
+            'employe',
+            'mois',
+            'annee',
+            'salaire_base',
+            'primes',
+            'deductions',
+            'net_a_payer',
+        ]
 
 class EvaluationForm(forms.ModelForm):
     class Meta:
@@ -166,6 +174,11 @@ class FormationForm(forms.ModelForm):
             'date_debut': forms.DateInput(attrs={'type': 'date'}),
             'date_fin': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class InscriptionFormationUpdateForm(forms.ModelForm):
+    class Meta:
+        model = InscriptionFormation
+        fields = ['statut', 'attestation']
 
 class OffreEmploiForm(forms.ModelForm):
     class Meta:

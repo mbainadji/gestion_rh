@@ -193,6 +193,13 @@
                                     <span><i class="fas fa-arrow-right mx-1"></i></span>
                                     <span>{{ inscription.formation.date_fin|date:"d/m/y" }}</span>
                                 </div>
+                                {% if inscription.attestation %}
+                                <div class="mt-4">
+                                    <a href="{{ inscription.attestation.url }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-colors">
+                                        <i class="fas fa-file-pdf"></i> Attestation
+                                    </a>
+                                </div>
+                                {% endif %}
                             </div>
                             {% empty %}
                             <div class="col-span-full text-center py-12">

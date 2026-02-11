@@ -50,6 +50,7 @@ urlpatterns = [
     path('formations/<int:pk>/edit/', views.formation_update, name='formation_update'),
     path('formations/<int:pk>/delete/', views.formation_delete, name='formation_delete'),
     path('formations/<int:pk>/register/', views.formation_register, name='formation_register'),
+    path('formations/<int:pk>/inscriptions/<int:inscription_pk>/update/', views.formation_inscription_update, name='formation_inscription_update'),
     
     # Recrutement
     path('recrutements/', views.recrutement_list, name='recrutement_list'),

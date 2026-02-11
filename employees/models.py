@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from io import BytesIO
 
 class Departement(models.Model):
     nom = models.CharField(max_length=100, verbose_name="Nom du département")
@@ -159,6 +161,68 @@ class FichePaie(models.Model):
     net_a_payer = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Net à payer")
     date_paiement = models.DateField(auto_now_add=True, verbose_name="Date de paiement")
     fichier_pdf = models.FileField(upload_to='fiches_paie/', null=True, blank=True, verbose_name="Fiche de paie PDF")
+
+    def _build_pdf_content(self):
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.units import cm
+            from reportlab.pdfgen import canvas
+        except ImportError as exc:
+            raise RuntimeError(
+                "La génération PDF nécessite la dépendance 'reportlab'."
+            ) from exc
+
+        buffer = BytesIO()
+        page_width, page_height = A4
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+
+        pdf.setTitle(f"Fiche de paie {self.mois:02d}/{self.annee}")
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(2 * cm, page_height - 2 * cm, "Fiche de paie")
+
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(2 * cm, page_height - 3 * cm, f"Employé : {self.employe}")
+        pdf.drawString(2 * cm, page_height - 3.8 * cm, f"Période : {self.mois:02d}/{self.annee}")
+        pdf.drawString(
+            2 * cm,
+            page_height - 4.6 * cm,
+            f"Date de paiement : {self.date_paiement:%d/%m/%Y}",
+        )
+
+        current_y = page_height - 6 * cm
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(2 * cm, current_y, "Salaire de base")
+        pdf.drawRightString(page_width - 2 * cm, current_y, f"{self.salaire_base} €")
+
+        current_y -= 0.8 * cm
+        pdf.setFont("Helvetica", 11)
+        pdf.drawString(2 * cm, current_y, "Primes")
+        pdf.drawRightString(page_width - 2 * cm, current_y, f"{self.primes} €")
+
+        current_y -= 0.8 * cm
+        pdf.drawString(2 * cm, current_y, "Déductions")
+        pdf.drawRightString(page_width - 2 * cm, current_y, f"{self.deductions} €")
+
+        current_y -= 1.2 * cm
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(2 * cm, current_y, "Net à payer")
+        pdf.drawRightString(page_width - 2 * cm, current_y, f"{self.net_a_payer} €")
+
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+        return ContentFile(buffer.read())
+
+    def generate_pdf(self):
+        filename = f"fiche_paie_{self.employe_id}_{self.annee}_{self.mois:02d}.pdf"
+        pdf_content = self._build_pdf_content()
+        self.fichier_pdf.save(filename, pdf_content, save=False)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.fichier_pdf:
+            self.generate_pdf()
+            super().save(update_fields=['fichier_pdf'])
 
     def __str__(self):
         return f"Fiche de paie {self.mois}/{self.annee} - {self.employe}"

@@ -76,10 +76,38 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center">
+                            <div class="flex flex-col items-end gap-3">
                                 <a href="{% url 'employees:employee_detail' inscription.employe.pk %}" class="w-10 h-10 flex items-center justify-center bg-slate-100 text-slate-400 hover:bg-brand-light hover:text-brand rounded-xl transition-all">
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
+                                <div class="text-xs text-slate-500">
+                                    {% if inscription.attestation %}
+                                    <a href="{{ inscription.attestation.url }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-semibold hover:bg-emerald-100 transition-colors">
+                                        <i class="fas fa-file-pdf"></i> Attestation
+                                    </a>
+                                    {% else %}
+                                    <span class="text-slate-400 italic">Attestation absente</span>
+                                    {% endif %}
+                                </div>
+                                <form method="post" enctype="multipart/form-data" action="{% url 'employees:formation_inscription_update' formation.pk inscription.pk %}" class="flex flex-col items-end gap-2">
+                                    {% csrf_token %}
+                                    <div class="flex items-center gap-2">
+                                        <select name="statut" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 bg-white">
+                                            <option value="Inscrit" {% if inscription.statut == "Inscrit" %}selected{% endif %}>Inscrit</option>
+                                            <option value="En cours" {% if inscription.statut == "En cours" %}selected{% endif %}>En cours</option>
+                                            <option value="Réussi" {% if inscription.statut == "Réussi" %}selected{% endif %}>Réussi</option>
+                                            <option value="Échoué" {% if inscription.statut == "Échoué" %}selected{% endif %}>Échoué</option>
+                                        </select>
+                                        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white cursor-pointer hover:bg-slate-50">
+                                            <i class="fas fa-upload"></i>
+                                            <span>Attestation</span>
+                                            <input type="file" name="attestation" class="hidden" accept="application/pdf,image/*">
+                                        </label>
+                                        <button type="submit" class="px-3 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-dark transition-colors">
+                                            Enregistrer
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -136,6 +164,13 @@
                             {% endif %}
                         {% endif %}
                     </div>
+                    {% if user_inscription and user_inscription.attestation %}
+                    <div class="pt-4">
+                        <a href="{{ user_inscription.attestation.url }}" target="_blank" class="w-full py-4 bg-white/10 text-white font-bold rounded-2xl flex items-center justify-center gap-2 border border-white/10 hover:bg-white/20 transition-all">
+                            <i class="fas fa-file-pdf text-emerald-400"></i> Télécharger l'attestation
+                        </a>
+                    </div>
+                    {% endif %}
 
                     <div class="pt-8 border-t border-white/10">
                         <div class="p-6 bg-white/5 rounded-3xl border border-white/10">

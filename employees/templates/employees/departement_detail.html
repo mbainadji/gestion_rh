@@ -45,6 +45,7 @@
                     </div>
                 </div>
 
+                {% if user.is_superuser or user.profil.is_rh or user.profil.is_manager %}
                 <div class="mt-8 pt-6 border-t border-slate-50 grid grid-cols-2 gap-4">
                     <a href="{% url 'employees:departement_update' departement.pk %}" class="flex items-center justify-center px-4 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all">
                         Modifier
@@ -53,6 +54,7 @@
                         Supprimer
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -72,9 +74,11 @@
                     <i class="fas fa-id-badge text-brand"></i>
                     Postes rattachés
                 </h3>
+                {% if user.is_superuser or user.profil.is_rh or user.profil.is_manager %}
                 <a href="{% url 'employees:poste_create' %}?departement={{ departement.id }}" class="text-sm font-bold text-brand hover:text-brand-dark">
                     + Ajouter un poste
                 </a>
+                {% endif %}
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
