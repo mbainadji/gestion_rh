@@ -74,6 +74,13 @@ class Employe(models.Model):
         return self.role == 'EMPLOYE'
 
     @property
+    def leads_departement(self):
+        try:
+            return self.departement_dirige
+        except:
+            return None
+
+    @property
     def age(self):
         if self.date_naissance:
             import datetime
@@ -219,6 +226,10 @@ class FichePaie(models.Model):
         self.fichier_pdf.save(filename, pdf_content, save=False)
 
     def save(self, *args, **kwargs):
+        # Calcul automatique du net à payer si non renseigné ou pour mise à jour
+        if self.salaire_base is not None:
+            self.net_a_payer = self.salaire_base + (self.primes or 0) - (self.deductions or 0)
+            
         super().save(*args, **kwargs)
         if not self.fichier_pdf:
             self.generate_pdf()

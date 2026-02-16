@@ -1,4 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from django.db.models import Count, Q
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+import csv
+from django.http import HttpResponse
+
 from .models import (
     Employe, Departement, Poste, Conge, Absence, Presence, 
     FichePaie, Prime, Evaluation, Objectif, Formation, 
@@ -10,39 +20,26 @@ from .forms import (
     OffreEmploiForm, CandidatureForm, DocumentRHForm,
     InscriptionFormationUpdateForm
 )
-from django.utils import timezone
-from django.db.models import Count, Q
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 
 from .decorators import rh_required, manager_required, superadmin_required, dept_admin_required
 
 @login_required
 def dashboard(request):
-    if not hasattr(request.user, 'profil'):
-        # Cas du superuser sans profil (considéré comme ADMIN global)
+    today = timezone.now().date()
+    if not hasattr(request.user, 'profil') or request.user.is_superuser or request.user.profil.is_superadmin:
+        # Cas du superuser ou profil ADMIN (voit tout au niveau global)
         total_employees = Employe.objects.count()
         departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
-        recent_conges = [] 
-        total_pending_conges = 0
-        today = timezone.now().date()
+        recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
+        total_pending_conges = Conge.objects.filter(statut='EN_ATTENTE').count()
         anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
     else:
         profil = request.user.profil
-        if profil.is_superadmin:
-            total_employees = Employe.objects.count()
-            departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
-            recent_conges = [] 
-            total_pending_conges = 0
-            today = timezone.now().date()
-            anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
-        elif profil.is_rh:
+        if profil.is_rh:
             total_employees = Employe.objects.count()
             departements = Departement.objects.annotate(num_employees=Count('postes__employes'))
             recent_conges = Conge.objects.filter(statut='EN_ATTENTE').order_by('-date_debut')[:5]
             total_pending_conges = Conge.objects.filter(statut='EN_ATTENTE').count()
-            today = timezone.now().date()
             anniversaires = Employe.objects.filter(date_naissance__month=today.month).order_by('date_naissance__day')
         elif profil.is_dept_admin or profil.role == 'EMPLOYE':
             if profil.poste:
@@ -57,7 +54,6 @@ def dashboard(request):
                     recent_conges = Conge.objects.filter(employe=profil).order_by('-date_debut')[:5]
                     total_pending_conges = Conge.objects.filter(employe=profil, statut='EN_ATTENTE').count()
                 
-                today = timezone.now().date()
                 anniversaires = Employe.objects.filter(poste__departement=dept, date_naissance__month=today.month).order_by('date_naissance__day')
             else:
                 total_employees = 0
@@ -66,21 +62,15 @@ def dashboard(request):
                 total_pending_conges = 0
                 anniversaires = []
 
-    # Logique commune pour les arrivées
-    today = timezone.now().date()
-    
-    # Filtrer les formations et les arrivées selon le rôle
-    if not request.user.is_superuser:
-        profil = request.user.profil
-        if not profil.is_rh:
-            if profil.poste:
-                total_formations = Formation.objects.filter(Q(departement=profil.poste.departement) | Q(departement__isnull=True)).count()
-            else:
-                total_formations = Formation.objects.filter(departement__isnull=True).count()
-        else:
-            total_formations = Formation.objects.count()
-    else:
+    # Logique commune pour les formations
+    if request.user.is_superuser or (hasattr(request.user, 'profil') and request.user.profil.is_rh):
         total_formations = Formation.objects.count()
+    else:
+        profil = request.user.profil
+        if profil.poste:
+            total_formations = Formation.objects.filter(Q(departement=profil.poste.departement) | Q(departement__isnull=True)).count()
+        else:
+            total_formations = Formation.objects.filter(departement__isnull=True).count()
 
     last_7_days = [(today - timezone.timedelta(days=i)) for i in range(6, -1, -1)]
     arrivals_per_day = []
@@ -155,15 +145,13 @@ def employee_detail(request, pk):
         # Employé ne voit que lui-même
         if not profil.is_superadmin and not profil.is_rh:
             if profil.is_dept_admin:
-                if employee.poste.departement != profil.poste.departement:
+                if not profil.poste or not employee.poste or employee.poste.departement != profil.poste.departement:
                     from django.core.exceptions import PermissionDenied
                     raise PermissionDenied
             else:
                 if employee != profil:
-                    # Un employé peut voir les talents de son département ? 
-                    # Le user dit "Peut voir uniquement son propre département et ses propres informations"
-                    # On va autoriser la vue détail si c'est le même département pour "voir les talents"
-                    if employee.poste.departement != profil.poste.departement:
+                    # Un employé peut voir les talents de son département
+                    if not profil.poste or not employee.poste or employee.poste.departement != profil.poste.departement:
                         from django.core.exceptions import PermissionDenied
                         raise PermissionDenied
 
@@ -379,6 +367,7 @@ def departement_delete(request, pk):
 # Gestion des Postes
 @login_required
 @rh_required
+@login_required
 def poste_list(request):
     postes = Poste.objects.select_related('departement').annotate(num_employees=Count('employes'))
     return render(request, 'employees/poste_list.html', {'postes': postes})
@@ -441,7 +430,10 @@ def conge_list(request):
     elif profil.is_rh:
         conges = Conge.objects.all().select_related('employe')
     elif profil.is_dept_admin:
-        conges = Conge.objects.filter(employe__poste__departement=profil.poste.departement).select_related('employe')
+        if profil.poste:
+            conges = Conge.objects.filter(employe__poste__departement=profil.poste.departement).select_related('employe')
+        else:
+            conges = []
     else:
         conges = Conge.objects.filter(employe=profil).select_related('employe')
         
@@ -481,19 +473,16 @@ def conge_request(request):
 def conge_approve(request, pk):
     conge = get_object_or_404(Conge, pk=pk)
     
-    if not hasattr(request.user, 'profil') or request.user.profil.is_superadmin:
-        from django.core.exceptions import PermissionDenied
-        raise PermissionDenied
-
-    profil = request.user.profil
-    if not profil.is_rh:
-        if conge.employe.poste.departement != profil.poste.departement:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        # Un manager ne peut pas approuver la demande d'un autre manager
-        if conge.employe.role == 'MANAGER':
-            messages.error(request, "Seul un responsable RH peut approuver la demande d'un chef de service.")
-            return redirect('employees:conge_list')
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh:
+            if conge.employe.poste.departement != profil.poste.departement:
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+            # Un manager ne peut pas approuver la demande d'un autre manager
+            if conge.employe.role == 'MANAGER':
+                messages.error(request, "Seul un responsable RH peut approuver la demande d'un chef de service.")
+                return redirect('employees:conge_list')
 
     conge.statut = 'APPROUVE'
     conge.save()
@@ -510,19 +499,16 @@ def conge_approve(request, pk):
 def conge_reject(request, pk):
     conge = get_object_or_404(Conge, pk=pk)
     
-    if not hasattr(request.user, 'profil') or request.user.profil.is_superadmin:
-        from django.core.exceptions import PermissionDenied
-        raise PermissionDenied
-
-    profil = request.user.profil
-    if not profil.is_rh:
-        if conge.employe.poste.departement != profil.poste.departement:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        # Un manager ne peut pas rejeter la demande d'un autre manager
-        if conge.employe.role == 'MANAGER':
-            messages.error(request, "Seul un responsable RH peut rejeter la demande d'un chef de service.")
-            return redirect('employees:conge_list')
+    if not request.user.is_superuser:
+        profil = request.user.profil
+        if not profil.is_rh:
+            if conge.employe.poste.departement != profil.poste.departement:
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+            # Un manager ne peut pas rejeter la demande d'un autre manager
+            if conge.employe.role == 'MANAGER':
+                messages.error(request, "Seul un responsable RH peut rejeter la demande d'un chef de service.")
+                return redirect('employees:conge_list')
 
     conge.statut = 'REJETE'
     conge.save()
@@ -635,18 +621,12 @@ def presence_check(request):
 @login_required
 @rh_required
 def paie_list(request):
-    if hasattr(request.user, 'profil') and request.user.profil.is_superadmin:
-        from django.core.exceptions import PermissionDenied
-        raise PermissionDenied
     fiches = FichePaie.objects.all().select_related('employe').order_by('-annee', '-mois')
     return render(request, 'employees/paie_list.html', {'fiches': fiches})
 
 @login_required
 @rh_required
 def paie_create(request):
-    if hasattr(request.user, 'profil') and request.user.profil.is_superadmin:
-        from django.core.exceptions import PermissionDenied
-        raise PermissionDenied
     if request.method == 'POST':
         form = FichePaieForm(request.POST)
         if form.is_valid():
@@ -827,7 +807,10 @@ def recrutement_list(request):
         profil = request.user.profil
         if not profil.is_superadmin and not profil.is_rh:
             # Employé et DeptAdmin ne voient que leur département
-            offres = offres.filter(departement=profil.poste.departement)
+            if profil.poste:
+                offres = offres.filter(departement=profil.poste.departement)
+            else:
+                offres = offres.none()
             
     return render(request, 'employees/recrutement_list.html', {'offres': offres})
 
@@ -862,7 +845,7 @@ def recrutement_detail(request, pk):
     if not request.user.is_superuser:
         profil = request.user.profil
         if not profil.is_superadmin and not profil.is_rh:
-            if offre.departement != profil.poste.departement:
+            if not profil.poste or offre.departement != profil.poste.departement:
                 from django.core.exceptions import PermissionDenied
                 raise PermissionDenied
                 
